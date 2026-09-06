@@ -14,6 +14,7 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .refresh-btn { background: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         .refresh-btn:hover { background: #219653; }
+        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
     </style>
 </head>
 <body>
@@ -25,8 +26,8 @@
     <table>
         <thead>
             <tr>
-                <th>ID / Details</th>
-                <th>Record Data</th>
+                <th>Record Info</th>
+                <th>Data Object</th>
             </tr>
         </thead>
         <tbody id="adminTableBody">
@@ -47,7 +48,7 @@
                 result.records.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${row.id || 'N/A'}</td>
+                        <td>${row.type || 'Record'}</td>
                         <td><pre>${JSON.stringify(row, null, 2)}</pre></td>
                     `;
                     tbody.appendChild(tr);
@@ -61,7 +62,6 @@
         }
     }
 
-    // Page load hote hi data fetch karein
     loadAdminData();
 </script>
 
