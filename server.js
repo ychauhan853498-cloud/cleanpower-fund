@@ -1,0 +1,446 @@
+const express = require('express');
+const cors = require('cors');
+const cron = require('node-cron');
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(__dirname));
+
+let db;
+const otpStore = {};
+const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
+
+(async () => {
+  db = await open({
+    filename: path.join(__dirname, 'database.sqlite'),
+    driver: sqlite3.Database
+  });
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS user (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      phone TEXT,
+      password TEXT,
+      txn_pin TEXT DEFAULT '',
+      wallet_balance REAL DEFAULT 0,
+      total_invested REAL DEFAULT 0,
+      today_income REAL DEFAULT 0,
+      vip_level INTEGER DEFAULT 1,
+      referral_code TEXT,
+      referred_by TEXT DEFAULT '',
+      last_checkin TEXT DEFAULT '',
+      last_spin TEXT DEFAULT '',
+      claimed_milestones TEXT DEFAULT '',
+      completed_tasks TEXT DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS user_plans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      plan_name TEXT,
+      tier TEXT,
+      cost REAL,
+      daily_return REAL,
+      days_remaining INTEGER,
+      purchase_time TEXT,
+      status TEXT DEFAULT 'Active'
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER DEFAULT 1,
+      type TEXT,
+      amount REAL,
+      time TEXT,
+      status TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS recharge_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      amount REAL,
+      utr TEXT,
+      time TEXT,
+      status TEXT DEFAULT 'Pending'
+    );
+
+    CREATE TABLE IF NOT EXISTS withdrawal_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      gross_amount REAL,
+      fee REAL,
+      net_amount REAL,
+      upi_id TEXT,
+      time TEXT,
+      status TEXT DEFAULT 'Pending',
+      remarks TEXT DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      subject TEXT,
+      message TEXT,
+      status TEXT DEFAULT 'Open',
+      time TEXT
+    );
+  `);
+})();
+
+async function checkAndUpdateVipTier(userId) {
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  if (!user) return;
+  let newVip = 1;
+  if (user.total_invested >= 25000) newVip = 4;
+  else if (user.total_invested >= 10000) newVip = 3;
+  else if (user.total_invested >= 2500) newVip = 2;
+  else newVip = 1;
+
+  if (newVip !== user.vip_level) {
+    await db.run('UPDATE user SET vip_level = ? WHERE id = ?', [newVip, userId]);
+  }
+}
+
+async function distributeMultiLevelCommission(buyerId, planCost) {
+  const buyer = await db.get('SELECT * FROM user WHERE id = ?', [buyerId]);
+  if (!buyer || !buyer.referred_by) return;
+
+  const timeNow = new Date().toLocaleTimeString();
+  const l1User = await db.get('SELECT * FROM user WHERE referral_code = ?', [buyer.referred_by]);
+  if (l1User) {
+    const l1Reward = Math.round(planCost * 0.10);
+    await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l1Reward, l1Reward, l1User.id]);
+    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l1User.id, `TIER-1 REBATE (10%)`, l1Reward, timeNow, 'Settled']);
+
+    if (l1User.referred_by) {
+      const l2User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l1User.referred_by]);
+      if (l2User) {
+        const l2Reward = Math.round(planCost * 0.05);
+        await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l2Reward, l2Reward, l2User.id]);
+        await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l2User.id, `TIER-2 REBATE (5%)`, l2Reward, timeNow, 'Settled']);
+
+        if (l2User.referred_by) {
+          const l3User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l2User.referred_by]);
+          if (l3User) {
+            const l3Reward = Math.round(planCost * 0.02);
+            await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l3Reward, l3Reward, l3User.id]);
+            await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l3User.id, `TIER-3 REBATE (2%)`, l3Reward, timeNow, 'Settled']);
+          }
+        }
+      }
+    }
+  }
+}
+
+cron.schedule('0 0 * * *', async () => {
+  if (!db) return;
+  await db.run('UPDATE user SET today_income = 0');
+  const activePlans = await db.all('SELECT p.*, u.vip_level FROM user_plans p JOIN user u ON p.user_id = u.id WHERE p.days_remaining > 0 AND p.status = "Active"');
+  const timeNow = new Date().toLocaleTimeString();
+
+  for (const plan of activePlans) {
+    const updatedDays = plan.days_remaining - 1;
+    let multiplier = 1.0;
+    if (plan.vip_level === 2) multiplier = 1.05;
+    if (plan.vip_level === 3) multiplier = 1.10;
+    if (plan.vip_level >= 4) multiplier = 1.15;
+
+    const boostedReturn = Number((plan.daily_return * multiplier).toFixed(2));
+
+    if (updatedDays > 0) {
+      await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [boostedReturn, boostedReturn, plan.user_id]);
+      await db.run('UPDATE user_plans SET days_remaining = ? WHERE id = ?', [updatedDays, plan.id]);
+      await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [plan.user_id, `DAILY YIELD`, boostedReturn, timeNow, 'Settled']);
+    } else {
+      const totalSettlement = boostedReturn + plan.cost;
+      await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ?, total_invested = total_invested - ? WHERE id = ?', [totalSettlement, boostedReturn, plan.cost, plan.user_id]);
+      await db.run('UPDATE user_plans SET days_remaining = 0, status = "Matured" WHERE id = ?', [plan.id]);
+      await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [plan.user_id, `PRINCIPAL RELEASE (${plan.plan_name})`, totalSettlement, timeNow, 'Matured & Settled']);
+      await checkAndUpdateVipTier(plan.user_id);
+    }
+  }
+});
+
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+
+app.post('/api/send-otp', async (req, res) => {
+  const { phone } = req.body;
+  if (!phone || phone.trim().length < 10) return res.status(400).json({ error: "Invalid mobile number." });
+  const otp = Math.floor(1000 + Math.random() * 9000).toString();
+  otpStore[phone] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+  res.json({ message: "OTP sent.", testOtp: otp });
+});
+
+app.post('/api/register-with-otp', async (req, res) => {
+  const { name, phone, password, otp, refCode } = req.body;
+  if (!name || !phone || !password || !otp) return res.status(400).json({ error: "All fields required." });
+  if (!hasSpecialChar(password)) return res.status(400).json({ error: "Password needs a special character." });
+
+  const stored = otpStore[phone];
+  if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid or expired OTP." });
+
+  const existing = await db.get('SELECT * FROM user WHERE phone = ?', [phone]);
+  if (existing) return res.status(400).json({ error: "Number already registered." });
+
+  delete otpStore[phone];
+  const cleanRef = (refCode || '').trim();
+  const newRefCode = 'SLR' + Math.floor(1000 + Math.random() * 9000);
+  const timeNow = new Date().toLocaleTimeString();
+
+  const result = await db.run('INSERT INTO user (name, phone, password, wallet_balance, referral_code, referred_by, vip_level) VALUES (?, ?, ?, ?, ?, ?, 1)', [name, phone, password, 50, newRefCode, cleanRef]);
+  const newUserId = result.lastID;
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [newUserId, 'WELCOME BONUS', 50, timeNow, 'Settled']);
+
+  if (cleanRef) {
+    const inviter = await db.get('SELECT * FROM user WHERE referral_code = ?', [cleanRef]);
+    if (inviter) {
+      await db.run('UPDATE user SET wallet_balance = wallet_balance + 50 WHERE id = ?', [inviter.id]);
+      await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [inviter.id, 'AFFILIATE BONUS', 50, timeNow, 'Settled']);
+    }
+  }
+  res.json({ message: "Registration successful. ₹50 credited.", userId: newUserId });
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  const { phone, otp, newPassword } = req.body;
+  const stored = otpStore[phone];
+  if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid OTP." });
+  await db.run('UPDATE user SET password = ? WHERE phone = ?', [newPassword, phone]);
+  delete otpStore[phone];
+  res.json({ message: "Password updated." });
+});
+
+app.post('/api/set-txn-pin', async (req, res) => {
+  const { userId, pin } = req.body;
+  if (!pin || pin.toString().length !== 6) return res.status(400).json({ error: "PIN must be 6 digits." });
+  await db.run('UPDATE user SET txn_pin = ? WHERE id = ?', [pin.toString(), userId]);
+  res.json({ message: "PIN saved." });
+});
+
+app.post('/api/login', async (req, res) => {
+  const { phone, password } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE phone = ? AND password = ?', [phone, password]);
+  if (!user) return res.status(400).json({ error: "Invalid credentials." });
+  res.json({ message: "Login successful.", userId: user.id });
+});
+
+app.get('/api/dashboard', async (req, res) => {
+  const userId = req.query.userId;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  if (!user) return res.status(404).json({ error: "User not found." });
+
+  const plans = await db.all('SELECT * FROM user_plans WHERE user_id = ? ORDER BY id DESC', [userId]);
+  const txns = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 15', [userId]);
+  const tickets = await db.all('SELECT * FROM support_tickets WHERE user_id = ? ORDER BY id DESC', [userId]);
+  
+  const totalAumRes = await db.get('SELECT SUM(total_invested) as total FROM user');
+  const totalPayoutRes = await db.get('SELECT SUM(gross_amount) as total FROM withdrawal_requests WHERE status = "Settled"');
+
+  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const nextSettlement = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+
+  const l1Users = await db.all('SELECT id, name, phone FROM user WHERE referred_by = ?', [user.referral_code]);
+  let l2Users = [], l3Users = [];
+  for (const u1 of l1Users) {
+    const subs = await db.all('SELECT id FROM user WHERE referred_by = ?', [u1.referral_code]);
+    l2Users = l2Users.concat(subs);
+  }
+
+  const teamStats = { l1Count: l1Users.length, l2Count: l2Users.length, l3Count: l3Users.length, totalTeam: l1Users.length + l2Users.length + l3Users.length, l1Members: l1Users };
+  const claimedMilestones = (user.claimed_milestones || '').split(',').filter(Boolean);
+  const completedTasks = (user.completed_tasks || '').split(',').filter(Boolean);
+
+  res.json({
+    user: { ...user, hasPin: Boolean(user.txn_pin && user.txn_pin.length === 6), claimedMilestones, completedTasks },
+    canCheckIn: user.last_checkin !== today,
+    canSpin: user.last_spin !== today,
+    nextSettlementTimestamp: nextSettlement.getTime(),
+    myPlans: plans,
+    transactions: txns,
+    tickets,
+    teamStats,
+    platformStats: {
+      totalAum: totalAumRes.total || 14250000,
+      totalPayouts: totalPayoutRes.total || 8920000
+    }
+  });
+});
+
+app.post('/api/complete-task', async (req, res) => {
+  const { userId, taskId, reward } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  let completed = (user.completed_tasks || '').split(',').filter(Boolean);
+  if (completed.includes(taskId.toString())) return res.status(400).json({ error: "Task already completed." });
+
+  completed.push(taskId.toString());
+  const timeNow = new Date().toLocaleTimeString();
+  await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, completed_tasks = ? WHERE id = ?', [reward, completed.join(','), userId]);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `TASK REWARD (Task #${taskId})`, reward, timeNow, 'Settled']);
+  res.json({ message: `Successfully claimed ₹${reward} reward!` });
+});
+
+app.post('/api/support/ticket', async (req, res) => {
+  const { userId, subject, message } = req.body;
+  if (!subject || !message) return res.status(400).json({ error: "Subject and message required." });
+  const timeNow = new Date().toLocaleTimeString();
+  await db.run('INSERT INTO support_tickets (user_id, subject, message, status, time) VALUES (?, ?, ?, "Open", ?)', [userId, subject, message, timeNow]);
+  res.json({ message: "Support ticket submitted successfully." });
+});
+
+app.post('/api/claim-daily', async (req, res) => {
+  const { userId } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  const today = new Date().toISOString().slice(0, 10);
+  if (!user || user.last_checkin === today) return res.status(400).json({ error: "Already claimed." });
+
+  const timeNow = new Date().toLocaleTimeString();
+  await db.run('UPDATE user SET wallet_balance = wallet_balance + 5, today_income = today_income + 5, last_checkin = ? WHERE id = ?', [today, userId]);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, 'DAILY BONUS', 5, timeNow, 'Settled']);
+  res.json({ message: "₹5 credited." });
+});
+
+app.post('/api/claim-milestone', async (req, res) => {
+  const { userId, milestoneId } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  const claimed = (user.claimed_milestones || '').split(',').filter(Boolean);
+  if (claimed.includes(milestoneId.toString())) return res.status(400).json({ error: "Already claimed." });
+
+  const l1Members = await db.all('SELECT id FROM user WHERE referred_by = ?', [user.referral_code]);
+  const cfg = { "1": { req: 3, rew: 150, name: "3 Direct" }, "2": { req: 10, rew: 600, name: "10 Direct" }, "3": { req: 30, rew: 2000, name: "30 Direct" } };
+  const target = cfg[milestoneId.toString()];
+
+  if (l1Members.length < target.req) return res.status(400).json({ error: "Requirement not met." });
+
+  claimed.push(milestoneId.toString());
+  const timeNow = new Date().toLocaleTimeString();
+  await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, claimed_milestones = ? WHERE id = ?', [target.rew, claimed.join(','), userId]);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `SALARY BONUS (${target.name})`, target.rew, timeNow, 'Settled']);
+  res.json({ message: `₹${target.rew} milestone bonus credited.` });
+});
+
+app.post('/api/spin-wheel', async (req, res) => {
+  const { userId } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  const today = new Date().toISOString().slice(0, 10);
+  if (user.last_spin === today) return res.status(400).json({ error: "Already spun today." });
+
+  const segments = [{ label: "₹10", amount: 10 }, { label: "₹25", amount: 25 }, { label: "Try Again", amount: 0 }, { label: "₹50", amount: 50 }, { label: "₹5", amount: 5 }, { label: "₹100", amount: 100 }];
+  const roll = Math.random() * 100;
+  let idx = roll < 35 ? 4 : roll < 65 ? 0 : roll < 85 ? 1 : roll < 95 ? 2 : roll < 99 ? 3 : 5;
+  const prize = segments[idx];
+  const timeNow = new Date().toLocaleTimeString();
+
+  await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, last_spin = ? WHERE id = ?', [prize.amount, today, userId]);
+  if (prize.amount > 0) {
+    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `LUCKY SPIN (${prize.label})`, prize.amount, timeNow, 'Settled']);
+  }
+  res.json({ segmentIndex: idx, label: prize.label, message: prize.amount > 0 ? `Won ${prize.label}!` : "Better luck next time!" });
+});
+
+app.post('/api/buy-plan', async (req, res) => {
+  const { userId, planName, tier, cost, dailyReturn, durationDays } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  if (user.wallet_balance < cost) return res.status(400).json({ error: "Insufficient balance." });
+
+  const timeNow = new Date().toLocaleTimeString();
+  await db.run('UPDATE user SET wallet_balance = wallet_balance - ?, total_invested = total_invested + ? WHERE id = ?', [cost, cost, userId]);
+  await db.run('INSERT INTO user_plans (user_id, plan_name, tier, cost, daily_return, days_remaining, purchase_time, status) VALUES (?, ?, ?, ?, ?, ?, ?, "Active")', [userId, planName, tier || 'VIP1', cost, dailyReturn, durationDays || 45, timeNow]);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `SUBSCRIPTION (${tier})`, -cost, timeNow, 'Settled']);
+
+  await distributeMultiLevelCommission(userId, cost);
+  await checkAndUpdateVipTier(userId);
+  res.json({ message: `Successfully subscribed to ${planName}.` });
+});
+
+app.post('/api/create-payment-order', async (req, res) => {
+  const { userId, amount } = req.body;
+  const dep = Number(amount);
+  if (!dep || dep < 200) return res.status(400).json({ error: "Minimum deposit is ₹200." });
+
+  const utrRef = 'UTR_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const timeNow = new Date().toLocaleTimeString();
+
+  await db.run('INSERT INTO recharge_requests (user_id, amount, utr, time, status) VALUES (?, ?, ?, ?, "Pending")', [userId, dep, utrRef, timeNow]);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `DEPOSIT SUBMITTED`, dep, timeNow, 'Pending Admin Approval']);
+
+  res.json({ success: true, message: "Deposit submitted for admin approval." });
+});
+
+app.post('/api/withdraw', async (req, res) => {
+  const { userId, amount, upiId, pin } = req.body;
+  const wAmt = Number(amount);
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+
+  if (!user) return res.status(404).json({ error: "User not found." });
+  if (!user.txn_pin || user.txn_pin.length !== 6) return res.status(400).json({ error: "Please configure your 6-digit Security PIN first." });
+  if (!pin || pin.toString() !== user.txn_pin) return res.status(403).json({ error: "Incorrect 6-digit Security PIN." });
+  if (!wAmt || wAmt < 200) return res.status(400).json({ error: "Minimum withdrawal amount is ₹200." });
+  if (wAmt > user.wallet_balance) return res.status(400).json({ error: "Insufficient wallet balance." });
+
+  let feePct = user.vip_level === 2 ? 0.04 : user.vip_level === 3 ? 0.03 : user.vip_level >= 4 ? 0.02 : 0.05;
+  const handlingFee = Math.round(wAmt * feePct);
+  const netPayable = wAmt - handlingFee;
+  const timeNow = new Date().toLocaleTimeString();
+
+  await db.run('UPDATE user SET wallet_balance = wallet_balance - ? WHERE id = ?', [wAmt, userId]);
+  await db.run('INSERT INTO withdrawal_requests (user_id, gross_amount, fee, net_amount, upi_id, time, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [userId, wAmt, handlingFee, netPayable, upiId, timeNow, 'Pending']);
+  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `WITHDRAWAL QUEUED`, -wAmt, timeNow, 'Pending Approval']);
+
+  res.json({ message: `Withdrawal submitted! Net ₹${netPayable} queued for payout (${feePct * 100}% fee).` });
+});
+
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === 'admin' && password === 'admin@123') res.json({ success: true });
+  else res.status(401).json({ error: "Invalid credentials." });
+});
+
+app.get('/api/admin/overview', async (req, res) => {
+  const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
+  const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
+  res.json({ recharges, withdrawals });
+});
+
+app.post('/api/admin/recharge-action', async (req, res) => {
+  const { requestId, action } = req.body;
+  const reqData = await db.get('SELECT * FROM recharge_requests WHERE id = ?', [requestId]);
+  const timeNow = new Date().toLocaleTimeString();
+
+  if (action === 'approve') {
+    await db.run('UPDATE recharge_requests SET status = "Approved" WHERE id = ?', [requestId]);
+    await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.amount, reqData.user_id]);
+    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `DEPOSIT APPROVED`, reqData.amount, timeNow, 'Settled']);
+    res.json({ message: "Deposit approved & credited to user wallet." });
+  } else {
+    await db.run('UPDATE recharge_requests SET status = "Rejected" WHERE id = ?', [requestId]);
+    res.json({ message: "Deposit rejected." });
+  }
+});
+
+app.post('/api/admin/withdraw-action', async (req, res) => {
+  const { requestId, action } = req.body;
+  const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
+  const timeNow = new Date().toLocaleTimeString();
+
+  if (action === 'approve') {
+    await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
+    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
+    res.json({ message: "Withdrawal settled." });
+  } else {
+    await db.run('UPDATE withdrawal_requests SET status = "Rejected" WHERE id = ?', [requestId]);
+    await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.gross_amount, reqData.user_id]);
+    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL REFUNDED`, reqData.gross_amount, timeNow, 'Refunded']);
+    res.json({ message: "Withdrawal rejected & refunded." });
+  }
+});
+
+app.listen(5000, () => {
+  console.log("Enterprise server running on http://localhost:5000");
+});
