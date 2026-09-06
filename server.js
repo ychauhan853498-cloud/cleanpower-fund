@@ -168,6 +168,7 @@ cron.schedule('0 0 * * *', async () => {
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 app.post('/api/send-otp', async (req, res) => {
   const { phone } = req.body;
@@ -406,6 +407,37 @@ app.get('/api/admin/overview', async (req, res) => {
   const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
   const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
   res.json({ recharges, withdrawals });
+});
+
+// Added to support admin.html fetching all users
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const users = await db.all("SELECT * FROM user ORDER BY id DESC");
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/admin/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  const { wallet_balance, status } = req.body;
+  try {
+    await db.run("UPDATE user SET wallet_balance = COALESCE(?, wallet_balance) WHERE id = ?", [wallet_balance, userId]);
+    res.json({ success: true, message: "User updated successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    await db.run("DELETE FROM user WHERE id = ?", [userId]);
+    res.json({ success: true, message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.post('/api/admin/recharge-action', async (req, res) => {
