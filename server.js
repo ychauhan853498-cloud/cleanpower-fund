@@ -409,7 +409,7 @@ app.get('/api/admin/overview', async (req, res) => {
   res.json({ recharges, withdrawals });
 });
 
-// Fixed mapping for admin.html frontend compatibility
+// Explicit Mapping for Admin Dashboard compatibility
 app.get('/api/admin/users', async (req, res) => {
   try {
     const users = await db.all(`
@@ -419,7 +419,7 @@ app.get('/api/admin/users', async (req, res) => {
         phone AS email, 
         wallet_balance AS deposit_amount, 
         'Active' AS status, 
-        'N/A' AS created_at 
+        '-' AS created_at 
       FROM user 
       ORDER BY id DESC
     `);
@@ -483,6 +483,7 @@ app.post('/api/admin/withdraw-action', async (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Enterprise server running on http://localhost:5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Enterprise server running on port ${PORT}`);
 });
