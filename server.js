@@ -10,13 +10,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
-// Database Connection
+// Database Connection & Table Initialization
 const dbFile = path.join(__dirname, 'database.sqlite');
 const db = new sqlite3.Database(dbFile, (err) => {
     if (err) {
         console.error('Error opening database', err.message);
     } else {
         console.log('Connected to the SQLite database.');
+        db.run(`CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fullname TEXT,
+            email TEXT,
+            deposit_amount REAL,
+            status TEXT DEFAULT 'Active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
     }
 });
 
@@ -25,38 +33,49 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Admin API to fetch records
-app.get('/api/admin/records', (req, res) => {
-    db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        
-        // Try fetching from records table or fallback to sqlite_master
-        db.all("SELECT * FROM records", [], (err, rows) => {
-            const data = err ? [] : rows;
-            res.json({ success: true, tables: tables, records: data });
-        });
-    });
-});
-
-// Admin API to save/insert new record into database
-app.post('/api/admin/save', (req, res) => {
-    const { title, description } = req.body;
-    
-    // Agar 'records' table nahi hai, toh use pehle create kar lete hain
-    db.run("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT)", (err) => {
+// API: Fetch all user records for Admin Dashboard
+app.get('/api/admin/users', (req, res) => {
+    db.all("SELECT * FROM users ORDER BY id DESC", [], (err, rows) => {
         if (err) {
             return res.status(500).json({ success: false, error: err.message });
         }
+        res.json({ success: true, users: rows });
+    });
+});
 
-        const query = `INSERT INTO records (title, description) VALUES (?, ?)`;
-        db.run(query, [title, description], function(err) {
-            if (err) {
-                return res.status(500).json({ success: false, error: err.message });
-            }
-            res.json({ success: true, message: 'Record saved successfully!', id: this.lastID });
-        });
+// API: Register User / Add Deposit
+app.post('/api/users/register', (req, res) => {
+    const { fullname, email, deposit_amount } = req.body;
+    const query = `INSERT INTO users (fullname, email, deposit_amount) VALUES (?, ?, ?)`;
+    db.run(query, [fullname, email, deposit_amount || 0], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, message: 'User registered successfully!', id: this.lastID });
+    });
+});
+
+// API: Update user deposit amount or status
+app.put('/api/admin/users/:id', (req, res) => {
+    const userId = req.params.id;
+    const { deposit_amount, status } = req.body;
+    const query = `UPDATE users SET deposit_amount = COALESCE(?, deposit_amount), status = COALESCE(?, status) WHERE id = ?`;
+    db.run(query, [deposit_amount, status, userId], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, message: 'User updated successfully' });
+    });
+});
+
+// API: Delete user record by ID
+app.delete('/api/admin/users/:id', (req, res) => {
+    const userId = req.params.id;
+    db.run("DELETE FROM users WHERE id = ?", [userId], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true, message: 'User deleted successfully' });
     });
 });
 

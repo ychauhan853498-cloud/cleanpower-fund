@@ -3,116 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CleanPower Fund - Admin Dashboard</title>
+    <title>CleanPower Fund - Enterprise Admin Portal</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2, h3 { color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #219653; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #27ae60; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        pre { margin: 0; white-space: pre-wrap; word-wrap: break-word; }
-        hr { margin: 30px 0; border: 0; border-top: 1px solid #ddd; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { color: #2c3e50; border-bottom: 2px solid #27ae60; padding-bottom: 10px; }
+        .stats-box { display: flex; gap: 20px; margin-bottom: 30px; }
+        .card { flex: 1; background: #e8f8f5; padding: 20px; border-radius: 8px; border-left: 5px solid #27ae60; }
+        .card h3 { margin: 0; color: #27ae60; font-size: 16px; }
+        .card p { margin: 10px 0 0 0; font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        input[type="text"] { padding: 10px; width: 280px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { background: #27ae60; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        .btn:hover { background: #219653; }
+        .btn-export { background: #2980b9; }
+        .btn-export:hover { background: #2471a3; }
+        .btn-edit { background: #f39c12; padding: 6px 10px; font-size: 12px; }
+        .btn-edit:hover { background: #d68910; }
+        .btn-danger { background: #c0392b; padding: 6px 10px; font-size: 12px; }
+        .btn-danger:hover { background: #962d22; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 14px; border: 1px solid #e1e1e1; text-align: left; font-size: 14px; }
+        th { background-color: #27ae60; color: white; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        .badge { background: #d4edda; color: #155724; padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>CleanPower Fund Admin Dashboard</h2>
-
-    <!-- Save Data Form -->
-    <h3>Add New Record</h3>
-    <form id="saveForm" onsubmit="saveRecord(event)">
-        <div class="form-group">
-            <label for="title">Title / Name:</label>
-            <input type="text" id="title" required placeholder="Enter title">
+    <h2>Enterprise Admin Dashboard - CleanPower Fund</h2>
+    
+    <div class="stats-box">
+        <div class="card">
+            <h3>Total Users</h3>
+            <p id="totalUsers">0</p>
         </div>
-        <div class="form-group">
-            <label for="description">Description / Details:</label>
-            <textarea id="description" rows="3" required placeholder="Enter details"></textarea>
+        <div class="card">
+            <h3>Total Deposits</h3>
+            <p id="totalDeposits">$0.00</p>
         </div>
-        <button type="submit">Save to Database</button>
-    </form>
+    </div>
 
-    <hr>
-
-    <h3>Database Records</h3>
-    <button onclick="loadAdminData()">Refresh Data</button>
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search by name or email..." onkeyup="filterUsers()">
+        <div class="btn-group">
+            <button class="btn" onclick="loadAllUserData()">Refresh Data</button>
+            <button class="btn btn-export" onclick="exportToCSV()">Export CSV</button>
+        </div>
+    </div>
     
     <table>
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Record Details</th>
+                <th>Full Name</th>
+                <th>Email Address</th>
+                <th>Deposit Amount</th>
+                <th>Status</th>
+                <th>Registration Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
-        <tbody id="adminTableBody">
-            <tr><td colspan="2" style="text-align: center;">Loading data...</td></tr>
+        <tbody id="userTableBody">
+            <tr><td colspan="7" style="text-align: center;">Loading secure records...</td></tr>
         </tbody>
     </table>
+
+    <div class="pagination">
+        <span id="pageInfo" style="color: #666; font-size: 14px;">Showing all records</span>
+    </div>
 </div>
 
 <script>
-    // Data save karne ka function
-    async function saveRecord(event) {
-        event.preventDefault();
-        const title = document.getElementById('title').value;
-        const description = document.getElementById('description').value;
+    let allUsersData = [];
 
+    async function loadAllUserData() {
         try {
-            const response = await fetch('/api/admin/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description })
-            });
+            const response = await fetch('/api/admin/users');
             const result = await response.json();
 
-            if (result.success) {
-                alert('Record saved successfully!');
-                document.getElementById('saveForm').reset();
-                loadAdminData(); // Table refresh karein
+            if (result.success && result.users) {
+                allUsersData = result.users;
+                displayUsers(allUsersData);
             } else {
-                alert('Error: ' + result.error);
-            }
-        } catch (err) {
-            console.error('Failed to save:', err);
-            alert('Failed to save record.');
-        }
-    }
-
-    // Database se data load karne ka function
-    async function loadAdminData() {
-        try {
-            const response = await fetch('/api/admin/records');
-            const result = await response.json();
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = '';
-
-            if (result.records && result.records.length > 0) {
-                result.records.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.id || 'N/A'}</td>
-                        <td><pre>${JSON.stringify(row, null, 2)}</pre></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } else {
-                tbody.innerHTML = `<tr><td colspan="2" style="text-align: center;">No records found in database.</td></tr>`;
+                allUsersData = [];
+                displayUsers([]);
             }
         } catch (error) {
-            console.error('Error fetching admin data:', error);
-            document.getElementById('adminTableBody').innerHTML = `<tr><td colspan="2" style="text-align: center; color: red;">Failed to load data.</td></tr>`;
+            console.error('Error fetching users:', error);
+            document.getElementById('userTableBody').innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Failed to establish database connection.</td></tr>`;
         }
     }
 
-    loadAdminData();
+    function displayUsers(users) {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = '';
+
+        if (users.length > 0) {
+            let totalDep = 0;
+            document.getElementById('totalUsers').innerText = users.length;
+
+            users.forEach(user => {
+                totalDep += Number(user.deposit_amount || 0);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${user.id}</td>
+                    <td><strong>${user.fullname || 'N/A'}</strong></td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td style="color: #27ae60; font-weight: bold;">$${Number(user.deposit_amount).toFixed(2)}</td>
+                    <td><span class="badge">${user.status}</span></td>
+                    <td>${user.created_at}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editUser(${user.id}, ${user.deposit_amount}, '${user.status}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteUser(${user.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('totalDeposits').innerText = '$' + totalDep.toFixed(2);
+            document.getElementById('pageInfo').innerText = `Total records displayed: ${users.length}`;
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">No user records found.</td></tr>`;
+            document.getElementById('totalUsers').innerText = '0';
+            document.getElementById('totalDeposits').innerText = '$0.00';
+            document.getElementById('pageInfo').innerText = 'No records found';
+        }
+    }
+
+    function filterUsers() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allUsersData.filter(user => 
+            (user.fullname && user.fullname.toLowerCase().includes(query)) || 
+            (user.email && user.email.toLowerCase().includes(query))
+        );
+        displayUsers(filtered);
+    }
+
+    async function editUser(id, currentDeposit, currentStatus) {
+        const newDeposit = prompt("Enter new deposit amount ($):", currentDeposit);
+        if (newDeposit === null) return;
+
+        const newStatus = prompt("Enter status (Active / Suspended / Pending):", currentStatus);
+        if (newStatus === null) return;
+
+        try {
+            const res = await fetch(`/api/admin/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deposit_amount: Number(newDeposit), status: newStatus })
+            });
+            const result = await res.json();
+            if (result.success) {
+                loadAllUserData();
+            } else {
+                alert('Failed to update: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error updating user:', err);
+        }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.success) {
+                loadAllUserData();
+            } else {
+                alert('Failed to delete: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error deleting user:', err);
+        }
+    }
+
+    function exportToCSV() {
+        if (allUsersData.length === 0) {
+            alert('No data available to export.');
+            return;
+        }
+
+        let csv = 'ID,Full Name,Email,Deposit Amount,Status,Registration Date\n';
+        allUsersData.forEach(u => {
+            csv += `"${u.id}","${u.fullname}","${u.email}","${u.deposit_amount}","${u.status}","${u.created_at}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'cleanpower_users_report.csv');
+        a.click();
+    }
+
+    loadAllUserData();
 </script>
 
 </body>
