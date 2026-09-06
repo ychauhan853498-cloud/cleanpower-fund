@@ -618,20 +618,6 @@
 
     let confirmationResultGlobal = null;
 
-    window.addEventListener('load', function() {
-      try {
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            'size': 'invisible',
-            'callback': (response) => {}
-          });
-          window.recaptchaVerifier.render();
-        }
-      } catch (e) {
-        console.error("Recaptcha init error:", e);
-      }
-    });
-
     async function requestFirebaseOtp() {
       const phoneInput = document.getElementById('regPhone').value.trim();
       const btn = document.getElementById('otpBtn');
@@ -644,11 +630,13 @@
       btn.textContent = "Sending...";
 
       try {
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            'size': 'invisible'
-          });
-        }
+        // Har request par container ko fresh karke naya verifier banayein taaki duplicate error na aaye
+        const container = document.getElementById('recaptcha-container');
+        container.innerHTML = '';
+
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible'
+        });
 
         const appVerifier = window.recaptchaVerifier;
         const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
@@ -660,14 +648,7 @@
         alert("Failed to send SMS OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
-        
-        try {
-          window.recaptchaVerifier.render().then(widgetId => {
-            grecaptcha.reset(widgetId);
-          });
-        } catch(ex) {
-          window.recaptchaVerifier = null;
-        }
+        window.recaptchaVerifier = null;
       }
     }
 
@@ -683,11 +664,12 @@
       btn.textContent = "Sending...";
 
       try {
-        if (!window.recaptchaVerifierForgot) {
-          window.recaptchaVerifierForgot = new firebase.auth.RecaptchaVerifier('forgotOtpBtn', {
-            'size': 'invisible'
-          });
-        }
+        const container = document.getElementById('recaptcha-container-forgot');
+        if (container) container.innerHTML = '';
+
+        window.recaptchaVerifierForgot = new firebase.auth.RecaptchaVerifier('recaptcha-container-forgot', {
+          'size': 'invisible'
+        });
         const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifierForgot);
         confirmationResultGlobal = result;
         alert("Real SMS OTP sent successfully to " + phoneNumber);
@@ -697,6 +679,7 @@
         alert("Failed to send SMS OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
+        window.recaptchaVerifierForgot = null;
       }
     }
 
