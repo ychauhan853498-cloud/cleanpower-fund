@@ -409,10 +409,20 @@ app.get('/api/admin/overview', async (req, res) => {
   res.json({ recharges, withdrawals });
 });
 
-// Added to support admin.html fetching all users
+// Fixed mapping for admin.html frontend compatibility
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const users = await db.all("SELECT * FROM user ORDER BY id DESC");
+    const users = await db.all(`
+      SELECT 
+        id, 
+        name AS fullname, 
+        phone AS email, 
+        wallet_balance AS deposit_amount, 
+        'Active' AS status, 
+        'N/A' AS created_at 
+      FROM user 
+      ORDER BY id DESC
+    `);
     res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
