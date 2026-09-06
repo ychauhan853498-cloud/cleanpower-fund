@@ -129,7 +129,14 @@
 
     .custom-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
     .custom-modal-content { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+  
+    /* Firebase styling elements */
+    #recaptcha-container { margin-bottom: 12px; display: flex; justify-content: center; }
   </style>
+  
+  <!-- Firebase SDK Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -189,9 +196,13 @@
       <div id="fReg" style="display: none;">
         <input type="text" id="regName" placeholder="Full Legal Name" />
         <input type="tel" id="regPhone" placeholder="Mobile Number (10 Digits)" />
+        
+        <!-- Firebase reCAPTCHA container -->
+        <div id="recaptcha-container"></div>
+
         <div class="otp-row">
           <input type="number" id="regOtp" placeholder="SMS Code" />
-          <button type="button" class="btn-otp" id="otpBtn" onclick="requestOtp('signup')">Send Code</button>
+          <button type="button" class="btn-otp" id="otpBtn" onclick="requestFirebaseOtp()">Send Code</button>
         </div>
         <input type="password" id="regPass" placeholder="Create Password (e.g. Capital@2026)" />
         <small style="display:block; color:var(--text-muted); font-size:11px; margin:-6px 0 12px 2px;">*Must include 1 special character</small>
@@ -202,9 +213,13 @@
       <div id="fForgot" style="display: none;">
         <h3 style="margin-top:0; color:var(--accent); font-size:15px;">Security Credential Reset</h3>
         <input type="tel" id="forgotPhone" placeholder="Registered Mobile Number" />
+        
+        <!-- Firebase reCAPTCHA container for forgot password if needed, or share/separate container -->
+        <div id="recaptcha-container-forgot"></div>
+
         <div class="otp-row">
           <input type="number" id="forgotOtp" placeholder="SMS Code" />
-          <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestOtp('reset')">Send Code</button>
+          <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestFirebaseOtpReset()">Send Code</button>
         </div>
         <input type="password" id="forgotNewPass" placeholder="New Password" />
         <button class="btn-main" onclick="handleResetPassword()">Update Credentials</button>
@@ -512,7 +527,7 @@
             <span style="font-size:11px; color:#25D366; font-weight:800;">+91 8534980497</span>
           </div>
           <a href="https://wa.me/918534980497?text=Hello%20Support" target="_blank" class="support-link-btn" style="background:#25D366;">Open Chat</a>
-        </div>
+      </div>
       </div>
 
       <!-- FINANCIAL ACTION MODAL -->
@@ -589,6 +604,92 @@
   </div>
 
   <script>
+    // Firebase Configuration Initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyAOVNZIf5qlJXWB0qwe1QjzIR1cZItm7YU",
+      authDomain: "cleanpower-fund.firebaseapp.com",
+      projectId: "cleanpower-fund",
+      storageBucket: "cleanpower-fund.firebasestorage.app",
+      messagingSenderId: "1065453645635",
+      appId: "1:1065453645635:web:a6e37ab4f73584936bc9f6",
+      measurementId: "G-9ZZLHCW93G"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    let confirmationResultGlobal = null;
+
+    window.addEventListener('load', function() {
+      try {
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible',
+          'callback': (response) => {
+            // reCAPTCHA solved, allow sign-in.
+          }
+        });
+        window.recaptchaVerifier.render();
+      } catch (e) {
+        console.error("Recaptcha init error:", e);
+      }
+    });
+
+    async function requestFirebaseOtp() {
+      const phoneInput = document.getElementById('regPhone').value.trim();
+      const btn = document.getElementById('otpBtn');
+      if (!phoneInput || phoneInput.length < 10) {
+        return alert("Please enter a valid 10-digit mobile number.");
+      }
+
+      const phoneNumber = "+91" + phoneInput;
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      try {
+        const appVerifier = window.recaptchaVerifier;
+        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
+        confirmationResultGlobal = result;
+        alert("Real SMS OTP sent successfully to " + phoneNumber);
+        btn.textContent = "Sent ✓";
+      } catch (error) {
+        console.error("Firebase SMS error:", error);
+        alert("Failed to send SMS OTP: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Send Code";
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
+        }
+      }
+    }
+
+    async function requestFirebaseOtpReset() {
+      const phoneInput = document.getElementById('forgotPhone').value.trim();
+      const btn = document.getElementById('forgotOtpBtn');
+      if (!phoneInput || phoneInput.length < 10) {
+        return alert("Please enter a valid 10-digit mobile number.");
+      }
+
+      const phoneNumber = "+91" + phoneInput;
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      try {
+        // Render a temporary recaptcha verifier if needed or use existing
+        if (!window.recaptchaVerifierForgot) {
+          window.recaptchaVerifierForgot = new firebase.auth.RecaptchaVerifier('forgotOtpBtn', {
+            'size': 'invisible'
+          });
+        }
+        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifierForgot);
+        confirmationResultGlobal = result;
+        alert("Real SMS OTP sent successfully to " + phoneNumber);
+        btn.textContent = "Sent ✓";
+      } catch (error) {
+        console.error("Firebase SMS error:", error);
+        alert("Failed to send SMS OTP: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Send Code";
+      }
+    }
+
     let currentUserId = localStorage.getItem('cleanpower_user_id');
     let currentRefCode = '';
     let isPinConfigured = false;
@@ -906,26 +1007,6 @@
       else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
     }
 
-    async function requestOtp(type) {
-      const phoneInput = type === 'signup' ? document.getElementById('regPhone') : document.getElementById('forgotPhone');
-      const btn = type === 'signup' ? document.getElementById('otpBtn') : document.getElementById('forgotOtpBtn');
-      const phone = phoneInput.value;
-      if (!phone || phone.length < 10) return alert("Enter valid number.");
-
-      btn.disabled = true;
-      const res = await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, type })
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error); btn.disabled = false; return; }
-      alert(`Demo OTP: ${data.testOtp}`);
-      if (type === 'signup') document.getElementById('regOtp').value = data.testOtp;
-      else document.getElementById('forgotOtp').value = data.testOtp;
-      btn.disabled = false;
-    }
-
     async function handleRegister() {
       const name = document.getElementById('regName').value;
       const phone = document.getElementById('regPhone').value;
@@ -933,11 +1014,20 @@
       const password = document.getElementById('regPass').value;
       const refCode = document.getElementById('regRef').value;
       if (!hasSpecialChar(password)) return alert("Password needs a special character.");
+      if (!confirmationResultGlobal) return alert("Please request and verify Firebase SMS OTP first.");
+      if (!otp) return alert("Please enter the SMS code.");
+
+      try {
+        // Confirm OTP via Firebase SDK
+        await confirmationResultGlobal.confirm(otp);
+      } catch (err) {
+        return alert("Invalid Firebase OTP code. Please check and try again.");
+      }
 
       const res = await fetch('/api/register-with-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, otp, password, refCode })
+        body: JSON.stringify({ name, phone, otp: "FIREBASE_VERIFIED", password, refCode })
       });
       const data = await res.json();
       if (!res.ok) return alert(data.error);
@@ -952,11 +1042,18 @@
       const otp = document.getElementById('forgotOtp').value;
       const newPassword = document.getElementById('forgotNewPass').value;
       if (!hasSpecialChar(newPassword)) return alert("Password needs a special character.");
+      if (!confirmationResultGlobal) return alert("Please verify SMS OTP first.");
+
+      try {
+        await confirmationResultGlobal.confirm(otp);
+      } catch(err) {
+        return alert("Invalid Firebase OTP code.");
+      }
 
       const res = await fetch('/api/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp, newPassword })
+        body: JSON.stringify({ phone, otp: "FIREBASE_VERIFIED", newPassword })
       });
       const data = await res.json();
       if (!res.ok) return alert(data.error);
@@ -1056,7 +1153,7 @@
               <div>
                 <b style="color:var(--text-main); font-size:13px;">${p.plan_name}</b> 
                 <div class="green" style="margin-top:4px; font-size:11px; font-weight: 700;">Daily Yield: +₹${p.daily_return}/day | Capital: ₹${p.cost}</div>
-              </div>
+            </div>
               <button onclick="openCertModal('${p.plan_name}', ${p.cost}, ${p.daily_return})" style="background:var(--accent); color:white; border:none; padding:6px 10px; border-radius:8px; font-weight:800; font-size:10px; cursor:pointer;">📄 Certificate</button>
             </div>
           `).join('');
