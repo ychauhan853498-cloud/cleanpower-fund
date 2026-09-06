@@ -604,7 +604,7 @@
   </div>
 
   <script>
-    // Firebase Configuration Initialization with Correct API Key
+    // Firebase Configuration Initialization
     const firebaseConfig = {
       apiKey: "AIzaSyAOVNZIF5qlJXWB0qwE1QjzIR1cZItm7YU",
       authDomain: "cleanpower-fund.firebaseapp.com",
@@ -620,13 +620,13 @@
 
     window.addEventListener('load', function() {
       try {
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          'size': 'invisible',
-          'callback': (response) => {
-            // reCAPTCHA solved, allow sign-in.
-          }
-        });
-        window.recaptchaVerifier.render();
+        if (!window.recaptchaVerifier) {
+          window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {}
+          });
+          window.recaptchaVerifier.render();
+        }
       } catch (e) {
         console.error("Recaptcha init error:", e);
       }
@@ -644,13 +644,11 @@
       btn.textContent = "Sending...";
 
       try {
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
+        if (!window.recaptchaVerifier) {
+          window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible'
+          });
         }
-
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          'size': 'invisible'
-        });
 
         const appVerifier = window.recaptchaVerifier;
         const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
@@ -662,6 +660,14 @@
         alert("Failed to send SMS OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
+        
+        try {
+          window.recaptchaVerifier.render().then(widgetId => {
+            grecaptcha.reset(widgetId);
+          });
+        } catch(ex) {
+          window.recaptchaVerifier = null;
+        }
       }
     }
 
