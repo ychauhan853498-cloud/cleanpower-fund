@@ -1259,6 +1259,40 @@
 
     startApp();
     setInterval(updateDashboard, 3000);
+    async function requestFirebaseOtp() {
+      const phoneInput = document.getElementById('regPhone').value.trim();
+      const btn = document.getElementById('otpBtn');
+      if (!phoneInput || phoneInput.length < 10) {
+        return alert("Please enter a valid 10-digit mobile number.");
+      }
+
+      const phoneNumber = "+91" + phoneInput;
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      try {
+        // Clear previous recaptcha if any
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+        }
+
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible'
+        });
+
+        const appVerifier = window.recaptchaVerifier;
+        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
+        confirmationResultGlobal = result;
+        alert("Real SMS OTP sent successfully to " + phoneNumber);
+        btn.textContent = "Sent ✓";
+      } catch (error) {
+        console.error("Firebase SMS error:", error);
+        alert("Failed to send SMS OTP: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Send Code";
+      }
+    }
   </script>
+  
 </body>
 </html>
