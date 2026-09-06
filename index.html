@@ -604,7 +604,7 @@
   </div>
 
   <script>
-    // Firebase Configuration Initialization
+    // Firebase Configuration Initialization with Correct API Key
     const firebaseConfig = {
       apiKey: "AIzaSyAOVNZIF5qlJXWB0qwE1QjzIR1cZItm7YU",
       authDomain: "cleanpower-fund.firebaseapp.com",
@@ -644,6 +644,14 @@
       btn.textContent = "Sending...";
 
       try {
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+        }
+
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible'
+        });
+
         const appVerifier = window.recaptchaVerifier;
         const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
         confirmationResultGlobal = result;
@@ -654,9 +662,6 @@
         alert("Failed to send SMS OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
-        }
       }
     }
 
@@ -672,7 +677,6 @@
       btn.textContent = "Sending...";
 
       try {
-        // Render a temporary recaptcha verifier if needed or use existing
         if (!window.recaptchaVerifierForgot) {
           window.recaptchaVerifierForgot = new firebase.auth.RecaptchaVerifier('forgotOtpBtn', {
             'size': 'invisible'
@@ -1018,7 +1022,6 @@
       if (!otp) return alert("Please enter the SMS code.");
 
       try {
-        // Confirm OTP via Firebase SDK
         await confirmationResultGlobal.confirm(otp);
       } catch (err) {
         return alert("Invalid Firebase OTP code. Please check and try again.");
@@ -1259,40 +1262,6 @@
 
     startApp();
     setInterval(updateDashboard, 3000);
-    async function requestFirebaseOtp() {
-      const phoneInput = document.getElementById('regPhone').value.trim();
-      const btn = document.getElementById('otpBtn');
-      if (!phoneInput || phoneInput.length < 10) {
-        return alert("Please enter a valid 10-digit mobile number.");
-      }
-
-      const phoneNumber = "+91" + phoneInput;
-      btn.disabled = true;
-      btn.textContent = "Sending...";
-
-      try {
-        // Clear previous recaptcha if any
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-        }
-
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          'size': 'invisible'
-        });
-
-        const appVerifier = window.recaptchaVerifier;
-        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
-        confirmationResultGlobal = result;
-        alert("Real SMS OTP sent successfully to " + phoneNumber);
-        btn.textContent = "Sent ✓";
-      } catch (error) {
-        console.error("Firebase SMS error:", error);
-        alert("Failed to send SMS OTP: " + error.message);
-        btn.disabled = false;
-        btn.textContent = "Send Code";
-      }
-    }
   </script>
-  
 </body>
 </html>
