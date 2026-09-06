@@ -28,7 +28,11 @@ const db = new sqlite3.Database(dbFile, (err) => {
     }
 });
 
-// Admin Route to serve admin.html explicitly
+// Explicit Routes for Homepage and Admin
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -55,7 +59,7 @@ app.post('/api/users/register', (req, res) => {
     });
 });
 
-// API: Update user deposit amount or status
+// API: Update user
 app.put('/api/admin/users/:id', (req, res) => {
     const userId = req.params.id;
     const { deposit_amount, status } = req.body;
@@ -68,7 +72,7 @@ app.put('/api/admin/users/:id', (req, res) => {
     });
 });
 
-// API: Delete user record by ID
+// API: Delete user
 app.delete('/api/admin/users/:id', (req, res) => {
     const userId = req.params.id;
     db.run("DELETE FROM users WHERE id = ?", [userId], function(err) {
