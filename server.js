@@ -170,7 +170,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// Brevo HTTP API Email OTP Route (100% Free & Render Compatible)
+// Brevo HTTP API Email OTP Route (Using Render Environment Variables)
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
@@ -182,12 +182,12 @@ app.post('/api/send-email-otp', async (req, res) => {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'accept': 'application/json',
-        'api-key': 'xkeysib-a6caef3a4237943bec3b6668c70bb9850e7ada699', // Aapki Brevo API Key
-        'content-type': 'application/json'
+        'Accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        sender: { name: "CleanPower Global", email: "ychauhan853498@gmail.com" }, // Aapki Email ID
+        sender: { name: "CleanPower Global", email: "ychauhan853498@gmail.com" },
         to: [{ email: email }],
         subject: "Verification Code - CleanPower Global",
         textContent: `Your institutional verification code is: ${otp}`
@@ -195,7 +195,10 @@ app.post('/api/send-email-otp', async (req, res) => {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Failed to send email via Brevo");
+    if (!response.ok) {
+      console.error("Brevo Error Response:", data);
+      throw new Error(data.message || data.code || "Failed to send email via Brevo");
+    }
 
     res.json({ message: "OTP sent successfully to your email!" });
   } catch (err) {
