@@ -91,13 +91,14 @@
     .task-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
     .section-header { font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin: 22px 0 12px 0; letter-spacing: 0.8px; }
-    .plan-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 16px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .plan-badge { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; }
+    .plan-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .plan-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .plan-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; }
     .badge-v1 { background: rgba(2, 132, 199, 0.15); color: var(--accent); border: 1px solid rgba(2, 132, 199, 0.3); }
     .badge-v2 { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
     .badge-v3 { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); border: 1px solid rgba(245, 158, 11, 0.3); }
     .badge-v4 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
-    .plan-title { font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 14px; }
+    .plan-title { font-size: 14px; font-weight: 800; color: var(--text-main); flex: 1; word-break: break-word; }
     .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #070d1d; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 11px; color: var(--text-muted); text-align: center; border: 1px solid var(--border); }
     .plan-grid b { display: block; font-size: 14px; color: var(--text-main); margin-top: 4px; font-weight: 800; }
     .green { color: var(--accent-green) !important; }
@@ -316,8 +317,10 @@
         <div class="section-header">Commercial Clean-Energy Subscriptions (6 Tiers)</div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v1">VIP 1 Starter</span>
-          <div class="plan-title">Photovoltaic Generation Array 1kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">Photovoltaic Generation Array 1kW</div>
+            <span class="plan-badge badge-v1">VIP 1 Starter</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹500</b></div>
             <div>Daily Yield<b class="green">₹35/day</b></div>
@@ -327,8 +330,10 @@
         </div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v2">VIP 2 Enterprise</span>
-          <div class="plan-title">Commercial Rooftop Microgrid 5kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">Commercial Rooftop Microgrid 5kW</div>
+            <span class="plan-badge badge-v2">VIP 2 Enterprise</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹2,500</b></div>
             <div>Daily Yield<b class="green">₹200/day</b></div>
@@ -338,8 +343,10 @@
         </div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v3">VIP 3 Institutional</span>
-          <div class="plan-title">Mega-Scale Clean Energy Facility 20kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">Mega-Scale Clean Energy Facility 20kW</div>
+            <span class="plan-badge badge-v3">VIP 3 Institutional</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹10,000</b></div>
             <div>Daily Yield<b class="green">₹900/day</b></div>
@@ -349,8 +356,10 @@
         </div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v4">VIP 4 Advanced</span>
-          <div class="plan-title">High-Efficiency Wind Turbine Farm 50kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">High-Efficiency Wind Turbine Farm 50kW</div>
+            <span class="plan-badge badge-v4">VIP 4 Advanced</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹25,000</b></div>
             <div>Daily Yield<b class="green">₹2,450/day</b></div>
@@ -360,8 +369,10 @@
         </div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v4">VIP 4 Utility</span>
-          <div class="plan-title">Utility-Scale Solar Park Grid 100kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">Utility-Scale Solar Park Grid 100kW</div>
+            <span class="plan-badge badge-v4">VIP 4 Utility</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹35,000</b></div>
             <div>Daily Yield<b class="green">₹3,600/day</b></div>
@@ -371,8 +382,10 @@
         </div>
 
         <div class="plan-card">
-          <span class="plan-badge badge-v4">VIP 4 Flagship</span>
-          <div class="plan-title">Offshore Hybrid Green Energy Plant 250kW</div>
+          <div class="plan-header-row">
+            <div class="plan-title">Offshore Hybrid Green Energy Plant 250kW</div>
+            <span class="plan-badge badge-v4">VIP 4 Flagship</span>
+          </div>
           <div class="plan-grid">
             <div>Capital<b>₹50,000</b></div>
             <div>Daily Yield<b class="green">₹5,400/day</b></div>
@@ -1151,7 +1164,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        const cashfree = Cashfree({ mode: "sandbox" }); // Production hone par "production" karein
+        const cashfree = Cashfree({ mode: "sandbox" }); 
         let checkoutOptions = {
           paymentSessionId: data.paymentSessionId,
           redirectTarget: "_modal"
