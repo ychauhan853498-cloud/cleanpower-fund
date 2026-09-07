@@ -6,10 +6,10 @@ const { open } = require('sqlite');
 const path = require('path');
 const { Cashfree } = require('cashfree-pg');
 
-// Cashfree Configuration (Sandbox by default, switch to PRODUCTION for live)
+// Cashfree Configuration (Safe fallback to avoid undefined property crash)
 Cashfree.XClientId = process.env.CLIENT_ID || "YOUR_CASHFREE_APP_ID";
 Cashfree.XClientSecret = process.env.CLIENT_SECRET || "YOUR_CASHFREE_SECRET_KEY";
-Cashfree.XEnvironment = Cashfree.Environment.SANDBOX;
+Cashfree.XEnvironment = Cashfree.Environment?.SANDBOX || "SANDBOX";
 
 const app = express();
 app.use(cors());
