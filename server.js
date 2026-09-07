@@ -12,6 +12,7 @@ app.use(express.static(__dirname));
 
 let db;
 const emailOtpStore = {};
+const sseClients = new Map();
 const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
 
 (async () => {
@@ -89,8 +90,28 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       status TEXT DEFAULT 'Open',
       time TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      title TEXT,
+      message TEXT,
+      time TEXT,
+      is_read INTEGER DEFAULT 0
+    );
   `);
 })();
+
+function notifyUserLive(userId) {
+  const client = sseClients.get(userId.toString());
+  if (client) {
+    client.write(`data: ${JSON.stringify({ type: 'REFRESH', timestamp: Date.now() })}\n\n`);
+  }
+  const adminClient = sseClients.get('admin');
+  if (adminClient) {
+    adminClient.write(`data: ${JSON.stringify({ type: 'REFRESH', timestamp: Date.now() })}\n\n`);
+  }
+}
 
 async function checkAndUpdateVipTier(userId) {
   const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
@@ -116,6 +137,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
     const l1Reward = Math.round(planCost * 0.10);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l1Reward, l1Reward, l1User.id]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l1User.id, `TIER-1 REBATE (10%)`, l1Reward, timeNow, 'Settled']);
+    notifyUserLive(l1User.id);
 
     if (l1User.referred_by) {
       const l2User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l1User.referred_by]);
@@ -123,6 +145,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
         const l2Reward = Math.round(planCost * 0.05);
         await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l2Reward, l2Reward, l2User.id]);
         await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l2User.id, `TIER-2 REBATE (5%)`, l2Reward, timeNow, 'Settled']);
+        notifyUserLive(l2User.id);
 
         if (l2User.referred_by) {
           const l3User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l2User.referred_by]);
@@ -130,6 +153,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
             const l3Reward = Math.round(planCost * 0.02);
             await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l3Reward, l3Reward, l3User.id]);
             await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l3User.id, `TIER-3 REBATE (2%)`, l3Reward, timeNow, 'Settled']);
+            notifyUserLive(l3User.id);
           }
         }
       }
@@ -156,12 +180,14 @@ cron.schedule('0 0 * * *', async () => {
       await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [boostedReturn, boostedReturn, plan.user_id]);
       await db.run('UPDATE user_plans SET days_remaining = ? WHERE id = ?', [updatedDays, plan.id]);
       await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [plan.user_id, `DAILY YIELD`, boostedReturn, timeNow, 'Settled']);
+      notifyUserLive(plan.user_id);
     } else {
       const totalSettlement = boostedReturn + plan.cost;
       await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ?, total_invested = total_invested - ? WHERE id = ?', [totalSettlement, boostedReturn, plan.cost, plan.user_id]);
       await db.run('UPDATE user_plans SET days_remaining = 0, status = "Matured" WHERE id = ?', [plan.id]);
       await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [plan.user_id, `PRINCIPAL RELEASE (${plan.plan_name})`, totalSettlement, timeNow, 'Matured & Settled']);
       await checkAndUpdateVipTier(plan.user_id);
+      notifyUserLive(plan.user_id);
     }
   }
 });
@@ -169,6 +195,22 @@ cron.schedule('0 0 * * *', async () => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+
+app.get('/api/live-stream', (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).end();
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  sseClients.set(userId, res);
+
+  req.on('close', () => {
+    sseClients.delete(userId);
+  });
+});
 
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
@@ -225,12 +267,14 @@ app.post('/api/register-with-email-otp', async (req, res) => {
   const result = await db.run('INSERT INTO user (name, phone, password, wallet_balance, referral_code, referred_by, vip_level) VALUES (?, ?, ?, ?, ?, ?, 1)', [name, email, password, 50, newRefCode, cleanRef]);
   const newUserId = result.lastID;
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [newUserId, 'WELCOME BONUS', 50, timeNow, 'Settled']);
+  notifyUserLive(newUserId);
 
   if (cleanRef) {
     const inviter = await db.get('SELECT * FROM user WHERE referral_code = ?', [cleanRef]);
     if (inviter) {
       await db.run('UPDATE user SET wallet_balance = wallet_balance + 50 WHERE id = ?', [inviter.id]);
       await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [inviter.id, 'AFFILIATE BONUS', 50, timeNow, 'Settled']);
+      notifyUserLive(inviter.id);
     }
   }
   res.json({ message: "Registration successful. ₹50 credited.", userId: newUserId });
@@ -302,6 +346,19 @@ app.get('/api/dashboard', async (req, res) => {
   });
 });
 
+app.get('/api/notifications', async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: "User ID required." });
+  const notes = await db.all('SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 20', [userId]);
+  res.json({ success: true, notifications: notes });
+});
+
+app.post('/api/notifications/read', async (req, res) => {
+  const { userId } = req.body;
+  await db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ?', [userId]);
+  res.json({ success: true });
+});
+
 app.post('/api/complete-task', async (req, res) => {
   const { userId, taskId, reward } = req.body;
   const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
@@ -312,6 +369,7 @@ app.post('/api/complete-task', async (req, res) => {
   const timeNow = new Date().toLocaleTimeString();
   await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, completed_tasks = ? WHERE id = ?', [reward, completed.join(','), userId]);
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `TASK REWARD (Task #${taskId})`, reward, timeNow, 'Settled']);
+  notifyUserLive(userId);
   res.json({ message: `Successfully claimed ₹${reward} reward!` });
 });
 
@@ -320,6 +378,7 @@ app.post('/api/support/ticket', async (req, res) => {
   if (!subject || !message) return res.status(400).json({ error: "Subject and message required." });
   const timeNow = new Date().toLocaleTimeString();
   await db.run('INSERT INTO support_tickets (user_id, subject, message, status, time) VALUES (?, ?, ?, "Open", ?)', [userId, subject, message, timeNow]);
+  notifyUserLive(userId);
   res.json({ message: "Support ticket submitted successfully." });
 });
 
@@ -332,6 +391,7 @@ app.post('/api/claim-daily', async (req, res) => {
   const timeNow = new Date().toLocaleTimeString();
   await db.run('UPDATE user SET wallet_balance = wallet_balance + 5, today_income = today_income + 5, last_checkin = ? WHERE id = ?', [today, userId]);
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, 'DAILY BONUS', 5, timeNow, 'Settled']);
+  notifyUserLive(userId);
   res.json({ message: "₹5 credited." });
 });
 
@@ -351,6 +411,7 @@ app.post('/api/spin-wheel', async (req, res) => {
   if (prize.amount > 0) {
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `LUCKY SPIN (${prize.label})`, prize.amount, timeNow, 'Settled']);
   }
+  notifyUserLive(userId);
   res.json({ segmentIndex: idx, label: prize.label, message: prize.amount > 0 ? `Won ${prize.label}!` : "Better luck next time!" });
 });
 
@@ -366,6 +427,7 @@ app.post('/api/buy-plan', async (req, res) => {
 
   await distributeMultiLevelCommission(userId, cost);
   await checkAndUpdateVipTier(userId);
+  notifyUserLive(userId);
   res.json({ message: `Successfully subscribed to ${planName}.` });
 });
 
@@ -379,6 +441,7 @@ app.post('/api/create-payment-order', async (req, res) => {
 
   await db.run('INSERT INTO recharge_requests (user_id, amount, utr, time, status) VALUES (?, ?, ?, ?, "Pending")', [userId, dep, utrRef, timeNow]);
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `DEPOSIT SUBMITTED`, dep, timeNow, 'Pending Admin Approval']);
+  notifyUserLive(userId);
 
   res.json({ success: true, message: "Deposit submitted for admin approval." });
 });
@@ -402,6 +465,7 @@ app.post('/api/withdraw', async (req, res) => {
   await db.run('UPDATE user SET wallet_balance = wallet_balance - ? WHERE id = ?', [wAmt, userId]);
   await db.run('INSERT INTO withdrawal_requests (user_id, gross_amount, fee, net_amount, upi_id, time, status) VALUES (?, ?, ?, ?, ?, ?, ?)', [userId, wAmt, handlingFee, netPayable, upiId, timeNow, 'Pending']);
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `WITHDRAWAL QUEUED`, -wAmt, timeNow, 'Pending Approval']);
+  notifyUserLive(userId);
 
   res.json({ message: `Withdrawal submitted! Net ₹${netPayable} queued for payout (${feePct * 100}% fee).` });
 });
@@ -442,6 +506,7 @@ app.put('/api/admin/users/:id', async (req, res) => {
   const { wallet_balance, status } = req.body;
   try {
     await db.run("UPDATE user SET wallet_balance = COALESCE(?, wallet_balance) WHERE id = ?", [wallet_balance, userId]);
+    notifyUserLive(userId);
     res.json({ success: true, message: "User updated successfully" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -461,15 +526,35 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 app.post('/api/admin/recharge-action', async (req, res) => {
   const { requestId, action } = req.body;
   const reqData = await db.get('SELECT * FROM recharge_requests WHERE id = ?', [requestId]);
+  if (!reqData) return res.status(404).json({ error: "Request not found." });
+
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
     await db.run('UPDATE recharge_requests SET status = "Approved" WHERE id = ?', [requestId]);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.amount, reqData.user_id]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `DEPOSIT APPROVED`, reqData.amount, timeNow, 'Settled']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Deposit Approved ⚡", 
+      `Your deposit of ₹${reqData.amount} has been successfully credited to your wallet.`, 
+      timeNow
+    ]);
+
+    notifyUserLive(reqData.user_id);
     res.json({ message: "Deposit approved & credited to user wallet." });
   } else {
     await db.run('UPDATE recharge_requests SET status = "Rejected" WHERE id = ?', [requestId]);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Deposit Rejected ❌", 
+      `Your deposit request of ₹${reqData.amount} was rejected by admin.`, 
+      timeNow
+    ]);
+
+    notifyUserLive(reqData.user_id);
     res.json({ message: "Deposit rejected." });
   }
 });
@@ -477,16 +562,36 @@ app.post('/api/admin/recharge-action', async (req, res) => {
 app.post('/api/admin/withdraw-action', async (req, res) => {
   const { requestId, action } = req.body;
   const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
+  if (!reqData) return res.status(404).json({ error: "Request not found." });
+
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
     await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Withdrawal Settled 🏦", 
+      `Your withdrawal of ₹${reqData.net_amount} has been sent to your UPI ID.`, 
+      timeNow
+    ]);
+
+    notifyUserLive(reqData.user_id);
     res.json({ message: "Withdrawal settled." });
   } else {
     await db.run('UPDATE withdrawal_requests SET status = "Rejected" WHERE id = ?', [requestId]);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.gross_amount, reqData.user_id]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL REFUNDED`, reqData.gross_amount, timeNow, 'Refunded']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Withdrawal Refunded ⚠️", 
+      `Your withdrawal of ₹${reqData.gross_amount} was rejected. Funds have been refunded to your wallet.`, 
+      timeNow
+    ]);
+
+    notifyUserLive(reqData.user_id);
     res.json({ message: "Withdrawal rejected & refunded." });
   }
 });
