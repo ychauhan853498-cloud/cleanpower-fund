@@ -19,7 +19,16 @@ app.use(express.static(__dirname));
 let db;
 const emailOtpStore = {};
 const sseClients = new Map();
-const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
+
+// Strict password validation helper (Min 6 chars, 1 capital letter, 1 number, 1 special character)
+const validatePassword = (pass) => {
+  if (!pass) return false;
+  const minLength = pass.length >= 6;
+  const hasCapital = /[A-Z]/.test(pass);
+  const hasNumber = /[0-9]/.test(pass);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+  return minLength && hasCapital && hasNumber && hasSpecial;
+};
 
 (async () => {
   db = await open({
@@ -159,7 +168,6 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
   const l1User = await db.get('SELECT * FROM user WHERE referral_code = ?', [buyer.referred_by]);
   
   if (l1User) {
-    // Rule: If recruit purchases plan worth ₹500 or more, inviter receives ₹250 flat. Otherwise 0.
     const l1Reward = planCost >= 500 ? 250 : 0;
 
     if (l1Reward > 0) {
@@ -263,7 +271,10 @@ app.post('/api/send-email-otp', async (req, res) => {
 app.post('/api/register-with-email-otp', async (req, res) => {
   const { name, email, password, otp, refCode } = req.body;
   if (!name || !email || !password || !otp) return res.status(400).json({ error: "All fields required." });
-  if (!hasSpecialChar(password)) return res.status(400).json({ error: "Password needs a special character." });
+  
+  if (!validatePassword(password)) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long, contain at least 1 capital letter, 1 number, and 1 special character." });
+  }
 
   const stored = emailOtpStore[email];
   if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid or expired OTP." });
@@ -294,11 +305,17 @@ app.post('/api/register-with-email-otp', async (req, res) => {
 
 app.post('/api/reset-password-email', async (req, res) => {
   const { email, otp, newPassword } = req.body;
+  
+  if (!validatePassword(newPassword)) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long, contain at least 1 capital letter, 1 number, and 1 special character." });
+  }
+
   const stored = emailOtpStore[email];
   if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid OTP." });
+  
   await db.run('UPDATE user SET password = ? WHERE phone = ?', [newPassword, email]);
   delete emailOtpStore[email];
-  res.json({ message: "Password updated." });
+  res.json({ message: "Password updated successfully." });
 });
 
 app.post('/api/set-txn-pin', async (req, res) => {

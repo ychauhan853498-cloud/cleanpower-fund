@@ -284,7 +284,8 @@
           <button type="button" class="btn-otp" id="otpBtn" onclick="requestEmailOtp()">Send Code</button>
         </div>
         <input type="password" id="regPass" placeholder="Create Password (e.g. Capital@2026)" />
-        <small style="display:block; color:var(--text-muted); font-size:11px; margin:-6px 0 12px 2px;">*Must include 1 special character</small>
+        <input type="password" id="regConfirmPass" placeholder="Confirm Password" />
+        <small style="display:block; color:var(--text-muted); font-size:11px; margin:-6px 0 12px 2px;">*Min 6 chars, 1 capital letter, 1 number, 1 special character</small>
         <input type="text" id="regRef" placeholder="Affiliate Invitation Code (Optional)" />
         <button class="btn-main" style="background:var(--accent-green);" onclick="handleRegister()">Verify & Activate Account (+₹50)</button>
       </div>
@@ -298,6 +299,7 @@
           <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestEmailOtpReset()">Send Code</button>
         </div>
         <input type="password" id="forgotNewPass" placeholder="New Password" />
+        <input type="password" id="forgotConfirmPass" placeholder="Confirm New Password" />
         <button class="btn-main" onclick="handleResetPassword()">Update Credentials</button>
         <button onclick="switchAuth('log')" style="width:100%; background:none; border:none; color:var(--text-muted); margin-top:12px; cursor:pointer; font-size:12px; font-weight:700;">Return to Sign In</button>
       </div>
@@ -788,6 +790,14 @@
     let loggedInUserData = null;
 
     const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
+    const validatePasswordFormat = (pass) => {
+      // Minimum 6 chars, 1 capital letter, 1 number, 1 special character
+      const minLength = pass.length >= 6;
+      const hasCapital = /[A-Z]/.test(pass);
+      const hasNumber = /[0-9]/.test(pass);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+      return minLength && hasCapital && hasNumber && hasSpecial;
+    };
 
     setInterval(() => {
       if (currentUserId && rawBalance > 0) {
@@ -988,9 +998,11 @@
       const email = document.getElementById('regEmail').value;
       const otp = document.getElementById('regOtp').value;
       const password = document.getElementById('regPass').value;
+      const confirmPassword = document.getElementById('regConfirmPass').value;
       const refCode = document.getElementById('regRef').value;
       
-      if (!hasSpecialChar(password)) return alert("Password needs a special character.");
+      if (!validatePasswordFormat(password)) return alert("Password must be at least 6 characters long, contain at least 1 capital letter, 1 number, and 1 special character.");
+      if (password !== confirmPassword) return alert("Passwords do not match.");
       if (!otp) return alert("Please enter the email code.");
 
       const res = await fetch('/api/register-with-email-otp', {
@@ -1011,8 +1023,10 @@
       const email = document.getElementById('forgotEmail').value;
       const otp = document.getElementById('forgotOtp').value;
       const newPassword = document.getElementById('forgotNewPass').value;
+      const confirmPassword = document.getElementById('forgotConfirmPass').value;
       
-      if (!hasSpecialChar(newPassword)) return alert("Password needs a special character.");
+      if (!validatePasswordFormat(newPassword)) return alert("Password must be at least 6 characters long, contain at least 1 capital letter, 1 number, and 1 special character.");
+      if (newPassword !== confirmPassword) return alert("Passwords do not match.");
       if (!otp) return alert("Please enter the email code.");
 
       const res = await fetch('/api/reset-password-email', {
