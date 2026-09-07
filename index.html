@@ -721,7 +721,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("Email OTP sent successfully to " + email);
+        alert("OTP generated! Check Render logs for code.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);
@@ -750,7 +750,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("Email OTP sent successfully to " + email);
+        alert("OTP generated! Check Render logs for code.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);

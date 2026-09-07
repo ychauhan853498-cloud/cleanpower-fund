@@ -4,7 +4,6 @@ const cron = require('node-cron');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -14,15 +13,6 @@ app.use(express.static(__dirname));
 let db;
 const emailOtpStore = {};
 const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
-
-// Nodemailer configuration for 100% Free Email OTP
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'your-email@gmail.com',     // Yahan apni Gmail ID dalein
-    pass: 'your-gmail-app-password'   // Yahan Gmail ka App Password dalein
-  }
-});
 
 (async () => {
   db = await open({
@@ -180,25 +170,19 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// Email OTP Endpoints
+// Console OTP Logging Route (Bypasses Render SMTP Blocking)
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
+  
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
   emailOtpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
-  try {
-    await transporter.sendMail({
-      from: '"CleanPower Global" <your-email@gmail.com>',
-      to: email,
-      subject: 'Verification Code - CleanPower Global',
-      text: `Your institutional verification code is: ${otp}`
-    });
-    res.json({ message: "OTP sent successfully to email." });
-  } catch (err) {
-    console.error("Email send error:", err);
-    res.status(500).json({ error: "Failed to send email OTP." });
-  }
+  console.log(`=================================`);
+  console.log(`[OTP SERVICE] Code for ${email}: ${otp}`);
+  console.log(`=================================`);
+
+  res.json({ message: "OTP generated successfully!" });
 });
 
 app.post('/api/register-with-email-otp', async (req, res) => {
@@ -471,7 +455,7 @@ app.post('/api/admin/recharge-action', async (req, res) => {
 
 app.post('/api/admin/withdraw-action', async (req, res) => {
   const { requestId, action } = req.body;
-  const reqData = alignReq = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
+  const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
