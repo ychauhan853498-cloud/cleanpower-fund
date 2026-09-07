@@ -18,7 +18,7 @@
         .search-bar { padding: 10px 14px; background: #070d1d; border: 1px solid #334155; color: white; border-radius: 8px; width: 280px; font-size: 13px; outline: none; }
         .search-bar:focus { border-color: #0ea5e9; }
         
-        .btn-group { display: flex; gap: 10px; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { background: #0ea5e9; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 13px; transition: background 0.2s; }
         .btn:hover { background: #0284c7; }
         .btn-approve { background: #10b981; padding: 6px 12px; font-size: 11px; }
@@ -27,6 +27,7 @@
         .btn-reject:hover { background: #dc2626; }
         .btn-secondary { background: #334155; }
         .btn-secondary:hover { background: #475569; }
+        .btn-success { background: #10b981; }
 
         table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         th, td { padding: 14px; border-bottom: 1px solid #334155; text-align: left; font-size: 13px; }
@@ -43,8 +44,8 @@
 
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .modal-content { background: #0f172a; border: 1px solid #334155; border-radius: 16px; width: 100%; max-width: 550px; padding: 25px; max-height: 85vh; overflow-y: auto; }
-        .broadcast-box { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; }
-        .broadcast-box input { flex: 1; padding: 10px 14px; background: #070d1d; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; outline: none; }
+        .broadcast-box { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .broadcast-box input { flex: 1; min-width: 250px; padding: 10px 14px; background: #070d1d; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; outline: none; }
     </style>
 </head>
 <body>
@@ -79,11 +80,13 @@
     <div class="broadcast-box">
         <input type="text" id="broadcastMsg" placeholder="Type global announcement or festival bonus alert to push to all user bell notifications..." />
         <button class="btn" onclick="sendBroadcast()">📢 Push Announcement</button>
+        <button class="btn btn-success" onclick="openPlanModal()">➕ Create Investment Plan</button>
     </div>
 
     <div class="controls">
         <input type="text" id="globalSearch" class="search-bar" placeholder="🔍 Search user, email, UTR..." onkeyup="filterTables()" />
         <div class="btn-group">
+            <button class="btn btn-secondary" onclick="exportDataCSV()">📥 Export CSV</button>
             <button class="btn btn-secondary" onclick="loadAdminData()">Refresh Data</button>
             <button class="btn btn-reject" onclick="adminLogout()">Sign Out</button>
         </div>
@@ -142,6 +145,24 @@
             <span onclick="closeUserModal()" style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;">✕</span>
         </div>
         <div id="modalUserDetails" style="font-size:13px; line-height:1.6; color:#94a3b8;"></div>
+    </div>
+</div>
+
+<!-- Create Investment Plan Modal -->
+<div id="planModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; color:#0ea5e9;">Create Dynamic Solar Plan</h3>
+            <span onclick="closePlanModal()" style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;">✕</span>
+        </div>
+        <form onsubmit="submitNewPlan(event)" style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" id="planName" placeholder="Plan Name (e.g. Solar Alpha V2)" required style="padding:10px; background:#070d1d; border:1px solid #334155; color:white; border-radius:8px;" />
+            <input type="text" id="planTier" placeholder="Tier (e.g. VIP2)" required style="padding:10px; background:#070d1d; border:1px solid #334155; color:white; border-radius:8px;" />
+            <input type="number" id="planCost" placeholder="Cost (₹)" required style="padding:10px; background:#070d1d; border:1px solid #334155; color:white; border-radius:8px;" />
+            <input type="number" id="planReturn" placeholder="Daily Return (₹)" required style="padding:10px; background:#070d1d; border:1px solid #334155; color:white; border-radius:8px;" />
+            <input type="number" id="planDays" placeholder="Duration (Days)" required style="padding:10px; background:#070d1d; border:1px solid #334155; color:white; border-radius:8px;" />
+            <button type="submit" class="btn btn-success" style="padding:12px; margin-top:5px;">Save & Deploy Plan</button>
+        </form>
     </div>
 </div>
 
@@ -230,6 +251,7 @@
         uBody.innerHTML = '';
         if (users && users.length > 0) {
             users.forEach(u => {
+                const isSuspended = u.is_suspended === 1;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>#${u.id}</td>
@@ -248,6 +270,7 @@
                     <td>
                         <button class="btn btn-approve" style="padding:4px 8px; font-size:11px;" onclick="adjustUserBalance(${u.id}, ${u.wallet_balance})">Balance</button>
                         <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewUserHistory(${u.id})">History</button>
+                        <button class="btn ${isSuspended ? 'btn-approve' : 'btn-reject'}" style="padding:4px 8px; font-size:11px;" onclick="toggleSuspend(${u.id}, ${isSuspended ? 0 : 1})">${isSuspended ? 'Unblock' : 'Block'}</button>
                         <button class="btn btn-reject" style="padding:4px 8px; font-size:11px;" onclick="deleteUser(${u.id})">Delete</button>
                     </td>
                 `;
@@ -318,7 +341,7 @@
         const res = await fetch(`/api/admin/user-history?userId=${userId}`);
         const data = await res.json();
         if (data.success) {
-            document.getElementById('modalUserName').innerText = `${data.user.name}'s Profile & History`;
+            document.getElementById('modalUserName').innerText = `${data.user.name}'s Profile & Network`;
             document.getElementById('modalUserDetails').innerHTML = `
                 <p><b>Email / Phone:</b> ${data.user.phone}</p>
                 <p><b>Wallet Balance:</b> ₹${data.user.wallet_balance} | <b>Total Invested:</b> ₹${data.user.total_invested}</p>
@@ -327,13 +350,60 @@
                 <ul style="padding-left:15px; margin:5px 0;">
                     ${data.plans.map(p => `<li>${p.plan_name} (₹${p.cost}) - Yield: ₹${p.daily_return}/day</li>`).join('')}
                 </ul>
-                <p><b>Team Recruits (Tier 1):</b> ${data.teamCount} members</p>
+                <p><b>Direct Recruits (Team Count):</b> ${data.teamCount} members</p>
             `;
             document.getElementById('userModal').style.display = 'flex';
         }
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
+    function openPlanModal() { document.getElementById('planModal').style.display = 'flex'; }
+    function closePlanModal() { document.getElementById('planModal').style.display = 'none'; }
+
+    async function submitNewPlan(event) {
+        event.preventDefault();
+        const planName = document.getElementById('planName').value;
+        const tier = document.getElementById('planTier').value;
+        const cost = Number(document.getElementById('planCost').value);
+        const dailyReturn = Number(document.getElementById('planReturn').value);
+        const durationDays = Number(document.getElementById('planDays').value);
+
+        const res = await fetch('/api/admin/create-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planName, tier, cost, dailyReturn, durationDays })
+        });
+        const data = await res.json();
+        alert(data.message);
+        closePlanModal();
+        loadAdminData();
+    }
+
+    async function toggleSuspend(userId, suspend) {
+        if (!confirm(`Are you sure you want to ${suspend ? 'suspend' : 'activate'} this user account?`)) return;
+        const res = await fetch('/api/admin/suspend-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, suspend })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadAdminData();
+    }
+
+    function exportDataCSV() {
+        if (!cachedAdminData || !cachedAdminData.users) return alert("No data available to export.");
+        let csv = "ID,Name,Email,Wallet Balance,Total Invested,VIP Level,KYC Status\n";
+        cachedAdminData.users.forEach(u => {
+            csv += `${u.id},"${u.fullname}","${u.email}",${u.wallet_balance},${u.total_invested},${u.vip_level},${u.kyc_status}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `cleanpower_users_${Date.now()}.csv`);
+        a.click();
+    }
 
     function filterTables() {
         const query = document.getElementById('globalSearch').value.toLowerCase();
@@ -378,12 +448,15 @@
     }
 
     async function adjustUserBalance(userId, currentBalance) {
-        const newBal = prompt("Enter new wallet balance (₹):", currentBalance);
-        if (newBal === null) return;
+        const amt = prompt("Enter adjustment amount (e.g., 500 for credit, -200 for debit):");
+        if (amt === null || amt.trim() === "") return;
+        const type = Number(amt) >= 0 ? 'credit' : 'debit';
+        const reason = prompt("Enter adjustment reason (e.g., Festival Bonus / Penalty):", "Admin Correction");
+        
         const res = await fetch(`/api/admin/users/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ wallet_balance: Number(newBal) })
+            body: JSON.stringify({ adjustment_type: type, amount: Math.abs(Number(amt)), reason })
         });
         const data = await res.json();
         alert(data.message);
