@@ -170,7 +170,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// Brevo HTTP API Email OTP Route (Using Render Environment Variables)
+// Brevo HTTP API Email OTP Route (With built-in .trim() protection)
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
@@ -183,7 +183,7 @@ app.post('/api/send-email-otp', async (req, res) => {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
-        'api-key': process.env.BREVO_API_KEY,
+        'api-key': process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim() : '',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
