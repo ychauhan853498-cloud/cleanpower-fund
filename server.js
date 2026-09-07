@@ -120,7 +120,6 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
     );
   `);
 
-  // Safe migration checks
   try { await db.exec(`ALTER TABLE user ADD COLUMN kyc_status TEXT DEFAULT 'Pending'`); } catch(e) {}
   try { await db.exec(`ALTER TABLE user ADD COLUMN aadhaar TEXT DEFAULT ''`); } catch(e) {}
   try { await db.exec(`ALTER TABLE user ADD COLUMN pan TEXT DEFAULT ''`); } catch(e) {}
@@ -158,30 +157,22 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
 
   const timeNow = new Date().toLocaleTimeString();
   const l1User = await db.get('SELECT * FROM user WHERE referral_code = ?', [buyer.referred_by]);
+  
   if (l1User) {
-    const l1Reward = Math.round(planCost * 0.10);
-    await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l1Reward, l1Reward, l1User.id]);
-    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l1User.id, `TIER-1 REBATE (10%)`, l1Reward, timeNow, 'Settled']);
-    notifyUserLive(l1User.id);
+    // Rule: If recruit purchases plan worth ₹500 or more, inviter receives ₹250 flat. Otherwise 0.
+    const l1Reward = planCost >= 500 ? 250 : 0;
 
-    if (l1User.referred_by) {
-      const l2User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l1User.referred_by]);
-      if (l2User) {
-        const l2Reward = Math.round(planCost * 0.05);
-        await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l2Reward, l2Reward, l2User.id]);
-        await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l2User.id, `TIER-2 REBATE (5%)`, l2Reward, timeNow, 'Settled']);
-        notifyUserLive(l2User.id);
-
-        if (l2User.referred_by) {
-          const l3User = await db.get('SELECT * FROM user WHERE referral_code = ?', [l2User.referred_by]);
-          if (l3User) {
-            const l3Reward = Math.round(planCost * 0.02);
-            await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l3Reward, l3Reward, l3User.id]);
-            await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l3User.id, `TIER-3 REBATE (2%)`, l3Reward, timeNow, 'Settled']);
-            notifyUserLive(l3User.id);
-          }
-        }
-      }
+    if (l1Reward > 0) {
+      await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, today_income = today_income + ? WHERE id = ?', [l1Reward, l1Reward, l1User.id]);
+      await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [l1User.id, `REFERRAL REWARD (₹500+ Plan)`, l1Reward, timeNow, 'Settled']);
+      
+      await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+        l1User.id,
+        "Referral Bonus Credited 💰",
+        `Your recruit purchased a ₹${planCost} plan! ₹250 has been credited to your wallet.`,
+        timeNow
+      ]);
+      notifyUserLive(l1User.id);
     }
   }
 }

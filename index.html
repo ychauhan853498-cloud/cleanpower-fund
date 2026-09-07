@@ -161,6 +161,53 @@
     .chatbot-input-row input { margin-bottom: 0; padding: 10px; font-size: 12px; }
     .chatbot-send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition: opacity 0.2s; }
     .chatbot-send-btn:hover { opacity: 0.9; }
+
+    /* Team section animations */
+    @keyframes teamCardGlow {
+      0% { box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
+      50% { box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45); }
+      100% { box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
+    }
+    .team-banner {
+      background: linear-gradient(135deg, #4f46e5, #4338ca);
+      border-radius: 22px;
+      padding: 22px 24px;
+      color: white;
+      margin-bottom: 16px;
+      animation: teamCardGlow 4s ease-in-out infinite;
+      transition: transform 0.3s ease;
+    }
+    .team-banner:hover { transform: translateY(-2px); }
+    .team-stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .team-stat-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.15);
+    }
+    .share-action-btn {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      font-size: 12px;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .share-action-btn:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -449,21 +496,45 @@
         </div>
       </div>
 
+      <!-- Integrated Animated Team & Invite Section -->
       <div id="tabTeam" style="display: none;">
-        <div class="wallet-card" style="background: linear-gradient(135deg, #4f46e5, #4338ca);">
-          <div style="font-size: 12px; opacity:0.9; font-weight: 600;">Affiliate Identification Code</div>
-          <div class="wallet-balance" id="myRefCode">SLR1000</div>
+        <div class="team-banner">
+          <div style="font-size: 12px; opacity: 0.9; font-weight: 600;">🚀 Affiliate Invitation & Rewards Matrix</div>
+          <div class="wallet-balance" id="myRefCode" style="font-size: 24px; margin: 8px 0 6px 0; letter-spacing: 1px;">SLR1000</div>
+          <p style="font-size: 11px; opacity: 0.85; margin: 0 0 16px 0; line-height: 1.4;">
+            Earn <b style="color: #facc15;">₹250 instant cash reward</b> in your wallet when your invited recruit activates any plan worth <b>₹500 or more</b>!
+          </p>
           
           <div style="display: flex; gap: 10px;">
-            <button class="btn-w" style="flex:1;" onclick="copyReferralLink()">📋 Copy Link</button>
-            <button class="btn-w" style="flex:1;" onclick="copyReferralCode()">Copy Code</button>
+            <button class="share-action-btn" style="flex:1;" onclick="copyReferralLink()">📋 Copy Link</button>
+            <button class="share-action-btn" style="flex:1;" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
           </div>
         </div>
 
-        <div class="section-header">3-Tier Team Matrix</div>
-        <div class="stats-grid">
-          <div class="stat-box"><span>Tier 1 Recruits</span><b id="teamL1Count" style="color:var(--accent)">0</b></div>
-          <div class="stat-box"><span>Tier 2 Recruits</span><b id="teamL2Count" style="color:var(--accent)">0</b></div>
+        <div class="section-header">Your 3-Tier Network Matrix</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+          <div class="team-stat-card">
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 1</span>
+            <b id="teamL1Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+            <small style="font-size: 9px; color: var(--accent-green); font-weight: 700;">₹250 / ₹500+ Plan</small>
+          </div>
+          <div class="team-stat-card">
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 2</span>
+            <b id="teamL2Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+            <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Sub-Network</small>
+          </div>
+          <div class="team-stat-card">
+            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 3</span>
+            <b id="teamL3Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+            <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Global Sub</small>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+          <b style="color: var(--text-main); display: block; margin-bottom: 6px; font-size: 12px;">💡 Team Earning Guidelines:</b>
+          1. Share your unique link or code with your friends.<br>
+          2. When your invited friend subscribes to any clean-energy plan of <b>₹500 or more</b>, <b>₹250</b> is automatically credited to your wallet.<br>
+          3. If they purchase below ₹500 or make no investment, no referral reward is issued.
         </div>
       </div>
 
@@ -740,6 +811,7 @@
       const ref = urlParams.get('ref');
       if (ref) { switchAuth('reg'); document.getElementById('regRef').value = ref; }
       drawSpinWheel();
+      startApp();
     });
 
     function switchAuth(m) {
@@ -803,7 +875,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("OTP generated! Check Render logs for code.");
+        alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);
@@ -832,7 +904,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("OTP generated! Check Render logs for code.");
+        alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);
@@ -949,7 +1021,6 @@
     function handleLogout() {
       localStorage.removeItem('cleanpower_user_id');
       currentUserId = null;
-      sessionStorage.removeItem('unlocked');
       startApp();
     }
 
@@ -977,7 +1048,6 @@
           document.getElementById('statPayouts').textContent = `₹${(data.platformStats.totalPayouts / 100000).toFixed(2)} Lakhs`;
         }
 
-        // Dynamic Portfolio Allocation Calculation
         let solarTotal = 0;
         let windTotal = 0;
         let hydroTotal = 0;
@@ -1352,6 +1422,12 @@
 
     function copyReferralCode() { navigator.clipboard.writeText(currentRefCode).then(() => { alert("Code copied!"); }); }
 
+    function shareViaWhatsApp() {
+      const link = `${window.location.origin}/?ref=${currentRefCode}`;
+      const text = encodeURIComponent(`Join CleanPower Global Infrastructure Fund and start earning daily clean-energy yields! Register here: ${link}`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    }
+
     function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'flex'; }
     function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
 
@@ -1430,8 +1506,6 @@
       if (!res.ok) alert(data.error);
       else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
     }
-
-    startApp();
   </script>
 </body>
 </html>
