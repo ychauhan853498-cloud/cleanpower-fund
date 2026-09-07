@@ -6,7 +6,7 @@ const { open } = require('sqlite');
 const path = require('path');
 const { Cashfree } = require('cashfree-pg');
 
-// Cashfree Configuration (Safe fallback to avoid undefined property crash)
+// Cashfree Configuration
 Cashfree.XClientId = process.env.CLIENT_ID || "YOUR_CASHFREE_APP_ID";
 Cashfree.XClientSecret = process.env.CLIENT_SECRET || "YOUR_CASHFREE_SECRET_KEY";
 Cashfree.XEnvironment = Cashfree.Environment?.SANDBOX || "SANDBOX";
@@ -43,7 +43,10 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       last_checkin TEXT DEFAULT '',
       last_spin TEXT DEFAULT '',
       claimed_milestones TEXT DEFAULT '',
-      completed_tasks TEXT DEFAULT ''
+      completed_tasks TEXT DEFAULT '',
+      kyc_status TEXT DEFAULT 'Pending',
+      aadhaar TEXT DEFAULT '',
+      pan TEXT DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS user_plans (
@@ -307,6 +310,14 @@ app.post('/api/login-email', async (req, res) => {
   const user = await db.get('SELECT * FROM user WHERE phone = ? AND password = ?', [email, password]);
   if (!user) return res.status(400).json({ error: "Invalid credentials." });
   res.json({ message: "Login successful.", userId: user.id });
+});
+
+app.post('/api/kyc/submit', async (req, res) => {
+  const { userId, aadhaar, pan } = req.body;
+  if (!userId || !aadhaar || !pan) return res.status(400).json({ error: "All KYC fields required." });
+  await db.run('UPDATE user SET aadhaar = ?, pan = ?, kyc_status = "Under Review" WHERE id = ?', [aadhaar, pan, userId]);
+  notifyUserLive(userId);
+  res.json({ message: "KYC details submitted successfully. Verification under review." });
 });
 
 app.get('/api/dashboard', async (req, res) => {

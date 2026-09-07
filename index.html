@@ -36,10 +36,12 @@
 
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .top-actions { display: flex; gap: 8px; align-items: center; }
-    .support-btn { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .top-actions { display: flex; gap: 6px; align-items: center; }
+    .support-btn { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .support-btn:hover { background: rgba(16, 185, 129, 0.2); }
-    .logout-btn { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
+    .logout-btn { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .logout-btn:hover { background: rgba(239, 68, 68, 0.2); }
 
     .ticker-bar { background: #070d1d; border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; overflow: hidden; width: 100%; }
@@ -249,6 +251,7 @@
       <div class="brand">☀️ CleanPower Fund</div>
       <div class="top-actions">
         <button class="support-btn" onclick="openSupportModal()">🎧 Support</button>
+        <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
         <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
       </div>
     </header>
@@ -517,6 +520,33 @@
         <div id="supportTicketsArea" style="font-size:12px; color:var(--text-muted);">No active tickets.</div>
       </div>
 
+      <!-- Profile & KYC Modal -->
+      <div id="profileModal" class="custom-modal">
+        <div class="custom-modal-content">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; color:var(--accent); font-size:16px; font-weight: 900;">👤 User Profile & KYC Center</h3>
+            <span onclick="closeProfileModal()" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
+          </div>
+          
+          <div style="background:#070d1d; padding:16px; border-radius:14px; border:1px solid var(--border); margin-bottom:16px; font-size:13px;">
+            <p style="margin:0 0 8px 0;"><b>Full Name:</b> <span id="profileName" style="color:var(--text-muted);">--</span></p>
+            <p style="margin:0 0 8px 0;"><b>Registered Email:</b> <span id="profileEmail" style="color:var(--text-muted);">--</span></p>
+            <p style="margin:0 0 8px 0;"><b>Affiliate Code:</b> <span id="profileRef" style="color:var(--accent); font-weight:bold;">--</span></p>
+            <p style="margin:0;"><b>KYC Status:</b> <span id="profileKycStatus" style="color:var(--accent-yellow); font-weight:bold;">Pending Verification ⚠️</span></p>
+          </div>
+
+          <div class="section-header" style="margin-top:0;">Complete KYC Verification</div>
+          <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Submit your legal details to enable seamless instant payouts and full institutional tier access.</p>
+          
+          <input type="text" id="kycAadhaar" placeholder="Enter 12-Digit Aadhaar Number" maxlength="12" />
+          <input type="text" id="kycPan" placeholder="Enter 10-Digit PAN Number (e.g. ABCDE1234F)" maxlength="10" />
+          
+          <button class="btn-main" style="background:var(--accent-green); margin-top:6px;" onclick="submitKycVerification()">
+            🔒 Submit KYC Documents
+          </button>
+        </div>
+      </div>
+
       <div id="vipModal" class="custom-modal">
         <div class="custom-modal-content">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -649,6 +679,7 @@
     let activeGatewayMode = 'UPI';
     let rawBalance = 0;
     let sseConnection = null;
+    let loggedInUserData = null;
 
     let enteredPin = "";
     const correctPin = "1234";
@@ -696,6 +727,53 @@
 
     function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
     function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
+
+    function openProfileModal() {
+      closeSupportModal();
+      closeVipModal();
+      document.getElementById('profileModal').style.display = 'flex';
+      if (loggedInUserData) {
+        document.getElementById('profileName').textContent = loggedInUserData.name || 'Investor';
+        document.getElementById('profileEmail').textContent = loggedInUserData.phone || '--';
+        document.getElementById('profileRef').textContent = loggedInUserData.referral_code || '--';
+        
+        const kycElem = document.getElementById('profileKycStatus');
+        if (loggedInUserData.kyc_status === 'Verified') {
+          kycElem.textContent = 'Verified ✓';
+          kycElem.style.color = 'var(--accent-green)';
+        } else if (loggedInUserData.kyc_status === 'Under Review') {
+          kycElem.textContent = 'Under Review ⏳';
+          kycElem.style.color = 'var(--accent-yellow)';
+        } else {
+          kycElem.textContent = 'Pending Verification ⚠️';
+          kycElem.style.color = 'var(--accent-yellow)';
+        }
+      }
+    }
+    function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+
+    async function submitKycVerification() {
+      const aadhaar = document.getElementById('kycAadhaar').value.trim();
+      const pan = document.getElementById('kycPan').value.trim();
+      if (!aadhaar || aadhaar.length !== 12) return alert("Enter valid 12-digit Aadhaar number.");
+      if (!pan || pan.length !== 10) return alert("Enter valid 10-digit PAN number.");
+
+      try {
+        const res = await fetch('/api/kyc/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId, aadhaar, pan })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        alert(data.message);
+        closeProfileModal();
+        updateDashboard();
+      } catch (err) {
+        alert("KYC error: " + err.message);
+      }
+    }
 
     function openCertModal(name, cost, daily) {
       document.getElementById('certUserName').textContent = document.getElementById('dispUserName').textContent.replace("'s Account", "");
@@ -931,6 +1009,7 @@
         const res = await fetch(`/api/dashboard?userId=${currentUserId}`);
         const data = await res.json();
 
+        loggedInUserData = data.user;
         currentRefCode = data.user.referral_code;
         isPinConfigured = data.user.hasPin;
         nextSettlementTime = data.nextSettlementTimestamp;
