@@ -56,7 +56,6 @@
         <div class="live-indicator"><div class="live-dot"></div> Live Admin Feed Active</div>
     </h2>
     
-    <!-- Platform Metrics Cards -->
     <div class="stats-box">
         <div class="card">
             <h3>Total Registered Users</h3>
@@ -76,7 +75,6 @@
         </div>
     </div>
 
-    <!-- Broadcast Announcement Tool -->
     <div class="broadcast-box">
         <input type="text" id="broadcastMsg" placeholder="Type global announcement or festival bonus alert to push to all user bell notifications..." />
         <button class="btn" onclick="sendBroadcast()">📢 Push Announcement</button>
@@ -92,7 +90,6 @@
         </div>
     </div>
 
-    <!-- Recharges Table -->
     <div class="section-title">⚡ Pending / Recent Deposit Requests</div>
     <table>
         <thead>
@@ -103,7 +100,6 @@
         </tbody>
     </table>
 
-    <!-- Withdrawals Table -->
     <div class="section-title">🏦 Pending / Recent Withdrawal Requests</div>
     <table>
         <thead>
@@ -114,7 +110,6 @@
         </tbody>
     </table>
 
-    <!-- Registered Users & KYC Directory -->
     <div class="section-title">👥 Registered Users & KYC Directory</div>
     <table>
         <thead>
@@ -125,7 +120,6 @@
         </tbody>
     </table>
 
-    <!-- Support Tickets Center -->
     <div class="section-title">🎧 Active Support Tickets</div>
     <table>
         <thead>
@@ -137,7 +131,6 @@
     </table>
 </div>
 
-<!-- Detailed User History Modal -->
 <div id="userModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -148,7 +141,6 @@
     </div>
 </div>
 
-<!-- Create Investment Plan Modal -->
 <div id="planModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -261,7 +253,7 @@
                     <td>VIP ${u.vip_level}<br><small>${u.txn_pin ? 'PIN Set ✓' : 'No PIN ⚠'}</small></td>
                     <td>
                         <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : u.kyc_status === 'Rejected' ? 'badge-rejected' : 'badge'}">${u.kyc_status}</span><br>
-                        <small style="color:#94a3b8;">Aadhaar: ${u.aadhaar || 'N/A'}<br>PAN: ${u.pan || 'N/A'}</small>
+                        <small style="color:#94a3b8;">Aadhaar: [Aadhaar Redacted]<br>PAN: ${u.pan || 'N/A'}</small>
                         <div style="margin-top:4px;">
                             ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Verified')">Verify</button>` : ''}
                             ${u.kyc_status !== 'Rejected' ? `<button class="btn btn-reject" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Rejected')">Reject</button>` : ''}

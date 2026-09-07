@@ -463,7 +463,6 @@ app.post('/api/buy-plan', async (req, res) => {
   res.json({ message: `Successfully subscribed to ${planName}.` });
 });
 
-// ⚡ Cashfree Order Creation Integration
 app.post('/api/create-payment-order', async (req, res) => {
   try {
     const { userId, amount } = req.body;
@@ -535,7 +534,6 @@ app.post('/api/admin/login', (req, res) => {
   else res.status(401).json({ error: "Invalid credentials." });
 });
 
-// 🚀 Upgraded Admin Overview Endpoint with Metrics & Support Tickets
 app.get('/api/admin/overview', async (req, res) => {
   const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
   const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
@@ -563,7 +561,6 @@ app.get('/api/admin/overview', async (req, res) => {
   });
 });
 
-// 🛡️ Enhanced Admin Users Endpoint with KYC & Full Details
 app.get('/api/admin/users', async (req, res) => {
   try {
     const users = await db.all(`
@@ -589,7 +586,6 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-// 🚀 New Admin Actions & 10 Advanced Features Support
 app.post('/api/admin/kyc-action', async (req, res) => {
   const { userId, status } = req.body;
   await db.run('UPDATE user SET kyc_status = ? WHERE id = ?', [status, userId]);
@@ -710,7 +706,6 @@ app.post('/api/admin/withdraw-action', async (req, res) => {
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
-    // Automated Cashfree Payout API integration point
     await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
     
