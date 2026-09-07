@@ -109,6 +109,11 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       is_read INTEGER DEFAULT 0
     );
   `);
+
+  // Safe migration check for existing SQLite databases
+  try { await db.exec(`ALTER TABLE user ADD COLUMN kyc_status TEXT DEFAULT 'Pending'`); } catch(e) {}
+  try { await db.exec(`ALTER TABLE user ADD COLUMN aadhaar TEXT DEFAULT ''`); } catch(e) {}
+  try { await db.exec(`ALTER TABLE user ADD COLUMN pan TEXT DEFAULT ''`); } catch(e) {}
 })();
 
 function notifyUserLive(userId) {
