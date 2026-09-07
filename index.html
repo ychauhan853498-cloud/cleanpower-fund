@@ -788,14 +788,7 @@
             </button>
           </div>
 
-          <div id="withdrawSection" style="display:none;">
-            <input type="number" id="withdrawAmount" placeholder="Enter Withdrawal Amount (Min ₹200)" />
-            <input type="text" id="withdrawUpi" placeholder="Destination UPI ID (e.g. mobile@upi)" />
-            <input type="password" id="withdrawPin" maxlength="6" placeholder="Enter 6-Digit Security PIN" />
-            <button type="button" onclick="submitWithdrawalRequest()" style="width:100%; margin-top:4px; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px;">
-              Authorize Capital Settlement
-            </button>
-          </div>
+          <div id="withdrawSection" style="display:none;"></div>
         </div>
       </div>
 
@@ -1411,17 +1404,30 @@
         document.getElementById('payNowBtn').style.display = 'block';
         updateDepositBreakdown();
       } else {
-        if (!isPinConfigured) {
-          closeModal();
-          switchNav('support');
-          return alert("Please configure your 6-digit Security PIN first.");
-        }
-        head.textContent = 'Disinvestment Settlement (VIP Fee Active)';
         depositSec.style.display = 'none';
         withdrawSec.style.display = 'block';
-        document.getElementById('withdrawAmount').value = '';
-        document.getElementById('withdrawUpi').value = '';
-        document.getElementById('withdrawPin').value = '';
+
+        if (!isPinConfigured) {
+          head.textContent = 'Security PIN Required';
+          withdrawSec.innerHTML = `
+            <div style="text-align:center; padding: 10px 0;">
+              <p style="font-size:13px; color:var(--accent-yellow); margin-bottom:16px; font-weight:600;">⚠️ You must configure your 6-digit Security PIN in the Support tab before requesting instant payouts.</p>
+              <button type="button" onclick="closeModal(); switchNav('support');" style="width:100%; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);">
+                Configure Security PIN Now
+              </button>
+            </div>
+          `;
+        } else {
+          head.textContent = 'Disinvestment Settlement (VIP Fee Active)';
+          withdrawSec.innerHTML = `
+            <input type="number" id="withdrawAmount" placeholder="Enter Withdrawal Amount (Min ₹200)" />
+            <input type="text" id="withdrawUpi" placeholder="Destination UPI ID (e.g. mobile@upi)" />
+            <input type="password" id="withdrawPin" maxlength="6" placeholder="Enter 6-Digit Security PIN" />
+            <button type="button" onclick="submitWithdrawalRequest()" style="width:100%; margin-top:4px; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px;">
+              Authorize Capital Settlement
+            </button>
+          `;
+        }
       }
     }
 
