@@ -26,14 +26,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
 
-    #biometricLock { position: fixed; inset: 0; background: var(--bg-primary); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
-    .pin-dots { display: flex; gap: 14px; margin: 20px 0; }
-    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; transition: all 0.25s ease; }
-    .pin-dot.filled { background: var(--accent); transform: scale(1.1); }
-    .keypad { display: grid; grid-template-columns: repeat(3, 75px); gap: 14px; margin-top: 10px; }
-    .key-btn { background: var(--bg-surface); border: 1px solid var(--border); color: white; font-size: 20px; font-weight: 700; height: 55px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
-    .key-btn:active { background: var(--accent); transform: scale(0.92); }
-
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
@@ -172,32 +164,6 @@
   </style>
 </head>
 <body>
-
-  <div id="biometricLock" style="display:none;">
-    <div style="font-size:36px; margin-bottom:10px;">🔐</div>
-    <h2 style="margin:0 0 6px 0; color:var(--accent); font-size:20px;">CleanPower Secure Vault</h2>
-    <p style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">Enter your 4-digit security passcode</p>
-    <div class="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="keypad">
-      <div class="key-btn" onclick="pressKey(1)">1</div>
-      <div class="key-btn" onclick="pressKey(2)">2</div>
-      <div class="key-btn" onclick="pressKey(3)">3</div>
-      <div class="key-btn" onclick="pressKey(4)">4</div>
-      <div class="key-btn" onclick="pressKey(5)">5</div>
-      <div class="key-btn" onclick="pressKey(6)">6</div>
-      <div class="key-btn" onclick="pressKey(7)">7</div>
-      <div class="key-btn" onclick="pressKey(8)">8</div>
-      <div class="key-btn" onclick="pressKey(9)">9</div>
-      <div class="key-btn" style="visibility:hidden;"></div>
-      <div class="key-btn" onclick="pressKey(0)">0</div>
-      <div class="key-btn" onclick="pressKey('del')">⌫</div>
-    </div>
-  </div>
 
   <div class="floating-support-container">
     <a href="https://t.me/Earn_Money_Onlinewith" target="_blank" class="float-btn" title="Telegram Support">🤖</a>
@@ -700,40 +666,6 @@
     let sseConnection = null;
     let loggedInUserData = null;
 
-    let enteredPin = "";
-    const correctPin = "1234";
-
-    function checkPasscodeLock() {
-      if (currentUserId && !sessionStorage.getItem('unlocked')) {
-        document.getElementById('biometricLock').style.display = 'flex';
-      }
-    }
-
-    function pressKey(val) {
-      if (val === 'del') {
-        enteredPin = enteredPin.slice(0, -1);
-      } else if (enteredPin.length < 4) {
-        enteredPin += val;
-      }
-
-      for (let i = 0; i < 4; i++) {
-        const dot = document.getElementById(`pd${i}`);
-        if (i < enteredPin.length) dot.classList.add('filled');
-        else dot.classList.remove('filled');
-      }
-
-      if (enteredPin.length === 4) {
-        if (enteredPin === correctPin) {
-          sessionStorage.setItem('unlocked', 'true');
-          document.getElementById('biometricLock').style.display = 'none';
-        } else {
-          alert("Incorrect passcode! Use 1234");
-          enteredPin = "";
-          for (let i = 0; i < 4; i++) document.getElementById(`pd${i}`).classList.remove('filled');
-        }
-      }
-    }
-
     const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
 
     setInterval(() => {
@@ -808,7 +740,6 @@
       const ref = urlParams.get('ref');
       if (ref) { switchAuth('reg'); document.getElementById('regRef').value = ref; }
       drawSpinWheel();
-      checkPasscodeLock();
     });
 
     function switchAuth(m) {
@@ -1390,12 +1321,10 @@
         drawSpinWheel();
         updateDashboard();
         initLiveStream();
-        checkPasscodeLock();
       } else {
         if (sseConnection) sseConnection.close();
         document.getElementById('authScreen').style.display = 'block';
         document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('biometricLock').style.display = 'none';
       }
     }
 
