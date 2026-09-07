@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CleanPower Global Infrastructure Fund</title>
+  <!-- Cashfree Checkout SDK -->
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <style>
     :root {
       --bg-primary: #030712;
@@ -37,9 +39,11 @@
     .support-btn { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; }
     .logout-btn { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; }
 
-    .ticker-bar { background: #070d1d; border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
-    .ticker-text { animation: scrollLeft 30s linear infinite; display: inline-block; padding-left: 100%; color: var(--accent); font-weight: 500; }
-    @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+    .ticker-bar { background: #070d1d; border-bottom: 1px solid var(--border); padding: 10px 16px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; overflow: hidden; width: 100%; }
+    .ticker-title { font-weight: 800; color: var(--accent-yellow); margin-right: 8px; white-space: nowrap; flex-shrink: 0; }
+    .ticker-container { overflow: hidden; width: 100%; white-space: nowrap; }
+    .ticker-text { animation: scrollLeft 30s linear infinite; display: inline-block; color: var(--accent); font-weight: 500; }
+    @keyframes scrollLeft { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
     .clock-card { background: linear-gradient(135deg, #0f172a, #1e1b4b); border: 1px solid #312e81; border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
     .clock-time { font-size: 18px; font-weight: 800; color: var(--accent); font-family: ui-monospace, monospace; }
@@ -77,7 +81,7 @@
     .wallet-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 14px; margin-bottom: 18px; font-size: 12px; color: rgba(255,255,255,0.8); }
     .wallet-stats div:last-child { text-align: right; }
     .wallet-stats span { display: block; font-size: 15px; font-weight: 800; color: white; margin-top: 4px; }
-    .wallet-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .wallet-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 4px; }
     .btn-w { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; text-align: center; font-size: 13px; transition: 0.2s; }
     .btn-w:active { transform: scale(0.97); }
 
@@ -135,7 +139,6 @@
     .custom-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease-out; }
     .custom-modal-content { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 420px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.9); animation: modalPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-    /* AI Chatbot Styles */
     .chatbot-container { background: #070d1d; border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; height: 360px; overflow: hidden; margin-top: 10px; }
     .chatbot-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
     .chat-bubble { padding: 10px 14px; border-radius: 12px; max-width: 80%; line-height: 1.4; }
@@ -236,8 +239,10 @@
     </header>
 
     <div class="ticker-bar">
-      <span style="font-weight: 800; color: var(--accent-yellow); margin-right: 8px;">GLOBAL STATS:</span>
-      <span class="ticker-text" id="tickerStatsText">Total AUM: ₹14,250,000 • Total Payouts Distributed: ₹8,920,000 • Active Renewable Arrays: 1,420 Units</span>
+      <span class="ticker-title">GLOBAL STATS:</span>
+      <div class="ticker-container">
+        <span class="ticker-text" id="tickerStatsText">Total AUM: ₹14,250,000 • Total Payouts Distributed: ₹8,920,000 • Active Renewable Arrays: 1,420 Units</span>
+      </div>
     </div>
 
     <div class="container">
@@ -269,7 +274,7 @@
             <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:800;">Next Settlement Cycle</div>
             <div style="font-size:11px; color:var(--text-main); margin-top:3px; font-weight:600;">Midnight Yield Accrual</div>
           </div>
-          <div class="clock-time" id="countdownClock">--:--:--</div>
+          <div class="clock-time" id="countdownClock">05:12:40</div>
         </div>
 
         <div class="wallet-card">
@@ -557,8 +562,8 @@
             
             <div id="gatewayInfoBox" style="background:#070d1d; padding:12px; border-radius:10px; margin-bottom:14px; font-size:11px; color:var(--text-muted); border:1px solid var(--border);">
               <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span>Merchant VPA:</span>
-                <b style="color:var(--accent-yellow);">cleanpower@slc</b>
+                <span>Gateway Status:</span>
+                <b style="color:var(--accent-green);">Cashfree Live / Sandbox</b>
               </div>
               <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                 <span>Processing Fee:</span>
@@ -574,12 +579,12 @@
               <div class="deposit-radar">
                 <div class="radar-core">⚡</div>
               </div>
-              <div style="color: var(--accent); font-weight: 800; font-size: 13px;" id="depositStatusText">Transmitting Deposit Payload to Admin Queue...</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Awaiting merchant verification & approval</div>
+              <div style="color: var(--accent); font-weight: 800; font-size: 13px;" id="depositStatusText">Initializing Cashfree Checkout...</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Please complete payment in the secure popup</div>
             </div>
 
             <button type="button" id="payNowBtn" onclick="launchEnterpriseGateway()" style="width:100%; background:var(--accent-green); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-              🔒 Submit Deposit for Approval
+              🔒 Pay with Cashfree Gateway
             </button>
           </div>
 
@@ -1042,7 +1047,6 @@
       }
     }
 
-    // AI Chatbot Helper Logic
     function handleChatKeyPress(e) {
       if (e.key === 'Enter') {
         sendChatMessage();
@@ -1056,7 +1060,6 @@
 
       const chatMessages = document.getElementById('chatMessages');
       
-      // User bubble
       const userBubble = document.createElement('div');
       userBubble.className = 'chat-bubble user';
       userBubble.textContent = text;
@@ -1064,22 +1067,19 @@
       input.value = '';
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
-      // Automated AI assistant response logic
       setTimeout(() => {
         const botBubble = document.createElement('div');
         botBubble.className = 'chat-bubble bot';
         
         const lower = text.toLowerCase();
         if (lower.includes('deposit') || lower.includes('add money') || lower.includes('recharge')) {
-          botBubble.textContent = "To add money, go to the Invest tab, click 'Deposit' on your wallet card, choose a payment method, enter your UTR after paying to cleanpower@slc, and submit for admin approval.";
+          botBubble.textContent = "To add money, click 'Deposit' on your wallet card, enter your amount, and pay securely via Cashfree gateway.";
         } else if (lower.includes('withdraw') || lower.includes('payout')) {
-          botBubble.textContent = "To withdraw, ensure your 6-digit transaction PIN is configured in the Support tab. Then click 'Withdraw' on your wallet card, enter your UPI ID, and submit!";
+          botBubble.textContent = "To withdraw, ensure your 6-digit transaction PIN is configured in the Support tab. Then click 'Withdraw' on your wallet card and submit!";
         } else if (lower.includes('vip') || lower.includes('level')) {
-          botBubble.textContent = "VIP tiers increase automatically based on your total invested capital: VIP 2 (₹2,500+), VIP 3 (₹10,000+), VIP 4 (₹25,000+). Higher tiers give higher daily yields and lower fees!";
-        } else if (lower.includes('task') || lower.includes('spin') || lower.includes('checkin')) {
-          botBubble.textContent = "You can earn free cash daily by checking in, spinning the lucky wheel, or completing social sharing tasks in the Tasks tab!";
+          botBubble.textContent = "VIP tiers increase automatically based on your total invested capital: VIP 2 (₹2,500+), VIP 3 (₹10,000+), VIP 4 (₹25,000+).";
         } else {
-          botBubble.textContent = "Thanks for reaching out! For specific account inquiries, please submit a support ticket below or join our official Telegram community.";
+          botBubble.textContent = "Thanks for reaching out! For assistance, please submit a support ticket below or join our official Telegram community.";
         }
 
         chatMessages.appendChild(botBubble);
@@ -1110,7 +1110,7 @@
       modal.style.display = 'flex';
 
       if (type === 'deposit') {
-        head.textContent = 'Add Funds (Pending Admin Verification)';
+        head.textContent = 'Add Funds via Cashfree';
         depositSec.style.display = 'block';
         withdrawSec.style.display = 'none';
         document.getElementById('depositAmount').value = '';
@@ -1136,9 +1136,6 @@
       const amt = Number(document.getElementById('depositAmount').value);
       if (!amt || amt < 200) return alert("Minimum deposit amount is ₹200.");
 
-      const utrInput = prompt("Please enter your 12-digit UPI UTR / Reference Number after completing payment to cleanpower@slc:");
-      if (!utrInput || utrInput.trim().length < 6) return alert("Valid UTR / Reference number is required for verification.");
-
       const processingState = document.getElementById('depositProcessingState');
       const payBtn = document.getElementById('payNowBtn');
       
@@ -1149,18 +1146,30 @@
         const res = await fetch('/api/create-payment-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUserId, amount: amt, utr: utrInput.trim() })
+          body: JSON.stringify({ userId: currentUserId, amount: amt })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        setTimeout(() => {
-          alert("Deposit request submitted successfully! Awaiting admin verification.");
-          closeModal();
-          updateDashboard();
-        }, 1500);
+        const cashfree = Cashfree({ mode: "sandbox" }); // Production hone par "production" karein
+        let checkoutOptions = {
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal"
+        };
+
+        cashfree.checkout(checkoutOptions).then(function(result) {
+          processingState.style.display = 'none';
+          payBtn.style.display = 'block';
+          if (result.error) {
+            alert("Payment failed: " + result.error.message);
+          } else {
+            alert("Payment session completed successfully!");
+            closeModal();
+            updateDashboard();
+          }
+        });
       } catch (err) {
-        alert("Deposit submission failed: " + err.message);
+        alert("Gateway initialization failed: " + err.message);
         processingState.style.display = 'none';
         payBtn.style.display = 'block';
       }
