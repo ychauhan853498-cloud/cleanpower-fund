@@ -4,6 +4,12 @@ const cron = require('node-cron');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
+const { Cashfree } = require('cashfree-pg');
+
+// Cashfree Configuration (Sandbox by default, switch to PRODUCTION for live)
+Cashfree.XClientId = process.env.CLIENT_ID || "YOUR_CASHFREE_APP_ID";
+Cashfree.XClientSecret = process.env.CLIENT_SECRET || "YOUR_CASHFREE_SECRET_KEY";
+Cashfree.XEnvironment = Cashfree.Environment.SANDBOX;
 
 const app = express();
 app.use(cors());
@@ -431,19 +437,46 @@ app.post('/api/buy-plan', async (req, res) => {
   res.json({ message: `Successfully subscribed to ${planName}.` });
 });
 
+// ⚡ Cashfree Order Creation Integration
 app.post('/api/create-payment-order', async (req, res) => {
-  const { userId, amount } = req.body;
-  const dep = Number(amount);
-  if (!dep || dep < 200) return res.status(400).json({ error: "Minimum deposit is ₹200." });
+  try {
+    const { userId, amount } = req.body;
+    const dep = Number(amount);
+    if (!dep || dep < 200) return res.status(400).json({ error: "Minimum deposit is ₹200." });
 
-  const utrRef = 'UTR_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-  const timeNow = new Date().toLocaleTimeString();
+    const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: "User not found." });
 
-  await db.run('INSERT INTO recharge_requests (user_id, amount, utr, time, status) VALUES (?, ?, ?, ?, "Pending")', [userId, dep, utrRef, timeNow]);
-  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `DEPOSIT SUBMITTED`, dep, timeNow, 'Pending Admin Approval']);
-  notifyUserLive(userId);
+    const orderId = "ORDER_" + Date.now();
+    
+    var request = {
+      "order_amount": dep,
+      "order_currency": "INR",
+      "order_id": orderId,
+      "customer_details": {
+        "customer_id": user.id.toString(),
+        "customer_phone": user.phone || "9999999999",
+        "customer_email": user.phone || "user@cleanpower.com"
+      },
+      "order_meta": {
+        "return_url": `${req.protocol}://${req.get('host')}/?order_id=${orderId}`
+      }
+    };
 
-  res.json({ success: true, message: "Deposit submitted for admin approval." });
+    Cashfree.PGCreateOrder("2023-08-01", request).then(async (response) => {
+      const paymentSessionId = response.data.payment_session_id;
+      const timeNow = new Date().toLocaleTimeString();
+
+      await db.run('INSERT INTO recharge_requests (user_id, amount, utr, time, status) VALUES (?, ?, ?, ?, "Pending")', [userId, dep, orderId, timeNow]);
+      res.json({ success: true, paymentSessionId: paymentSessionId, orderId: orderId });
+    }).catch((error) => {
+      console.error("Cashfree API Error:", error.response?.data || error.message);
+      res.status(500).json({ error: "Failed to create Cashfree order." });
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/withdraw', async (req, res) => {
