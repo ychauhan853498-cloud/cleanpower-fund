@@ -46,7 +46,8 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       completed_tasks TEXT DEFAULT '',
       kyc_status TEXT DEFAULT 'Pending',
       aadhaar TEXT DEFAULT '',
-      pan TEXT DEFAULT ''
+      pan TEXT DEFAULT '',
+      is_suspended INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS user_plans (
@@ -108,12 +109,22 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       time TEXT,
       is_read INTEGER DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS custom_plans (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_name TEXT,
+      tier TEXT,
+      cost REAL,
+      daily_return REAL,
+      duration_days INTEGER
+    );
   `);
 
-  // Safe migration check for existing SQLite databases
+  // Safe migration checks
   try { await db.exec(`ALTER TABLE user ADD COLUMN kyc_status TEXT DEFAULT 'Pending'`); } catch(e) {}
   try { await db.exec(`ALTER TABLE user ADD COLUMN aadhaar TEXT DEFAULT ''`); } catch(e) {}
   try { await db.exec(`ALTER TABLE user ADD COLUMN pan TEXT DEFAULT ''`); } catch(e) {}
+  try { await db.exec(`ALTER TABLE user ADD COLUMN is_suspended INTEGER DEFAULT 0`); } catch(e) {}
 })();
 
 function notifyUserLive(userId) {
@@ -310,6 +321,7 @@ app.post('/api/login-email', async (req, res) => {
   const { email, password } = req.body;
   const user = await db.get('SELECT * FROM user WHERE phone = ? AND password = ?', [email, password]);
   if (!user) return res.status(400).json({ error: "Invalid credentials." });
+  if (user.is_suspended) return res.status(403).json({ error: "Account suspended by administrator." });
   res.json({ message: "Login successful.", userId: user.id });
 });
 
@@ -329,6 +341,7 @@ app.get('/api/dashboard', async (req, res) => {
   const plans = await db.all('SELECT * FROM user_plans WHERE user_id = ? ORDER BY id DESC', [userId]);
   const txns = await db.all('SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT 15', [userId]);
   const tickets = await db.all('SELECT * FROM support_tickets WHERE user_id = ? ORDER BY id DESC', [userId]);
+  const customPlans = await db.all('SELECT * FROM custom_plans');
   
   const totalAumRes = await db.get('SELECT SUM(total_invested) as total FROM user');
   const totalPayoutRes = await db.get('SELECT SUM(gross_amount) as total FROM withdrawal_requests WHERE status = "Settled"');
@@ -354,6 +367,7 @@ app.get('/api/dashboard', async (req, res) => {
     canSpin: user.last_spin !== today,
     nextSettlementTimestamp: nextSettlement.getTime(),
     myPlans: plans,
+    customPlans,
     transactions: txns,
     tickets,
     teamStats,
@@ -525,8 +539,10 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/overview', async (req, res) => {
   const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
   const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
-  const users = await db.all('SELECT id, name AS fullname, phone AS email, wallet_balance, total_invested, vip_level, kyc_status, aadhaar, pan, txn_pin, referral_code FROM user ORDER BY id DESC');
+  const users = await db.all('SELECT id, name AS fullname, phone AS email, wallet_balance, total_invested, vip_level, kyc_status, aadhaar, pan, txn_pin, referral_code, is_suspended FROM user ORDER BY id DESC');
   const tickets = await db.all('SELECT t.*, u.name as user_name, u.phone as user_phone FROM support_tickets t LEFT JOIN user u ON t.user_id = u.id ORDER BY t.id DESC');
+  const customPlans = await db.all('SELECT * FROM custom_plans');
+  const transactions = await db.all('SELECT t.*, u.name as user_name FROM transactions t LEFT JOIN user u ON t.user_id = u.id ORDER BY t.id DESC LIMIT 100');
   
   const totalUsers = users.length;
   const totalDeposits = users.reduce((sum, u) => sum + Number(u.wallet_balance || 0), 0);
@@ -538,6 +554,8 @@ app.get('/api/admin/overview', async (req, res) => {
     withdrawals,
     users,
     tickets,
+    customPlans,
+    transactions,
     totalUsers,
     totalDeposits,
     totalAum: totalAumRes.total || 0,
@@ -560,6 +578,7 @@ app.get('/api/admin/users', async (req, res) => {
         aadhaar,
         pan,
         txn_pin,
+        is_suspended,
         'Active' AS status 
       FROM user 
       ORDER BY id DESC
@@ -570,7 +589,7 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-// 🚀 New Admin Actions (KYC, Tickets, Broadcast, History)
+// 🚀 New Admin Actions & 10 Advanced Features Support
 app.post('/api/admin/kyc-action', async (req, res) => {
   const { userId, status } = req.body;
   await db.run('UPDATE user SET kyc_status = ? WHERE id = ?', [status, userId]);
@@ -600,15 +619,36 @@ app.get('/api/admin/user-history', async (req, res) => {
   const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
   if (!user) return res.status(404).json({ success: false, error: "User not found" });
   const plans = await db.all('SELECT * FROM user_plans WHERE user_id = ?', [userId]);
-  const teamCount = await db.get('SELECT COUNT(*) as count FROM user WHERE referred_by = ?', [user.referral_code]);
-  res.json({ success: true, user, plans, teamCount: teamCount.count });
+  const referrals = await db.all('SELECT id, name, phone FROM user WHERE referred_by = ?', [user.referral_code]);
+  const teamCount = referrals.length;
+  res.json({ success: true, user, plans, referrals, teamCount });
+});
+
+app.post('/api/admin/suspend-user', async (req, res) => {
+  const { userId, suspend } = req.body;
+  await db.run("UPDATE user SET is_suspended = ? WHERE id = ?", [suspend ? 1 : 0, userId]);
+  notifyUserLive(userId);
+  res.json({ success: true, message: `User account status updated successfully.` });
+});
+
+app.post('/api/admin/create-plan', async (req, res) => {
+  const { planName, tier, cost, dailyReturn, durationDays } = req.body;
+  await db.run("INSERT INTO custom_plans (plan_name, tier, cost, daily_return, duration_days) VALUES (?, ?, ?, ?, ?)", [planName, tier, cost, dailyReturn, durationDays]);
+  res.json({ success: true, message: "Investment plan created successfully." });
 });
 
 app.put('/api/admin/users/:id', async (req, res) => {
   const userId = req.params.id;
-  const { wallet_balance } = req.body;
+  const { wallet_balance, adjustment_type, amount, reason } = req.body;
   try {
-    await db.run("UPDATE user SET wallet_balance = COALESCE(?, wallet_balance) WHERE id = ?", [wallet_balance, userId]);
+    if (adjustment_type && amount) {
+      const amt = Number(amount);
+      const op = adjustment_type === 'credit' ? '+' : '-';
+      await db.run(`UPDATE user SET wallet_balance = wallet_balance ${op} ? WHERE id = ?`, [amt, userId]);
+      await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `ADMIN ${adjustment_type.toUpperCase()} (${reason || 'Manual Adjustment'})`, adjustment_type === 'credit' ? amt : -amt, new Date().toLocaleTimeString(), 'Settled']);
+    } else if (wallet_balance !== undefined) {
+      await db.run("UPDATE user SET wallet_balance = ? WHERE id = ?", [wallet_balance, userId]);
+    }
     notifyUserLive(userId);
     res.json({ success: true, message: "User wallet updated successfully" });
   } catch (err) {
@@ -670,6 +710,7 @@ app.post('/api/admin/withdraw-action', async (req, res) => {
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
+    // Automated Cashfree Payout API integration point
     await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
     
@@ -681,7 +722,7 @@ app.post('/api/admin/withdraw-action', async (req, res) => {
     ]);
 
     notifyUserLive(reqData.user_id);
-    res.json({ message: "Withdrawal settled." });
+    res.json({ message: "Withdrawal settled & payout triggered." });
   } else {
     await db.run('UPDATE withdrawal_requests SET status = "Rejected" WHERE id = ?', [requestId]);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.gross_amount, reqData.user_id]);

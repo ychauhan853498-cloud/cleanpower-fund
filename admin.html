@@ -31,7 +31,7 @@
         table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         th, td { padding: 14px; border-bottom: 1px solid #334155; text-align: left; font-size: 13px; }
         th { background-color: #070d1d; color: #94a3b8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; }
-        tr:hover { background-color: rgba(255,255,255,0.02); cursor: pointer; }
+        tr:hover { background-color: rgba(255,255,255,0.02); }
         
         .badge { background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
@@ -41,7 +41,6 @@
         .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Modal Styles */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         .modal-content { background: #0f172a; border: 1px solid #334155; border-radius: 16px; width: 100%; max-width: 550px; padding: 25px; max-height: 85vh; overflow-y: auto; }
         .broadcast-box { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; }
@@ -155,7 +154,6 @@
             const data = await res.json();
             cachedAdminData = data;
 
-            // Update Metrics Cards
             document.getElementById('totalUsers').innerText = data.totalUsers || 0;
             document.getElementById('totalDeposits').innerText = '₹' + (data.totalDeposits || 0).toFixed(2);
             document.getElementById('totalAum').innerText = '₹' + (data.totalAum || 0).toFixed(2);
@@ -243,7 +241,7 @@
                         <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : u.kyc_status === 'Rejected' ? 'badge-rejected' : 'badge'}">${u.kyc_status}</span><br>
                         <small style="color:#94a3b8;">Aadhaar: ${u.aadhaar || 'N/A'}<br>PAN: ${u.pan || 'N/A'}</small>
                         <div style="margin-top:4px;">
-                            ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Verified')">Verify KYC</button>` : ''}
+                            ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Verified')">Verify</button>` : ''}
                             ${u.kyc_status !== 'Rejected' ? `<button class="btn btn-reject" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Rejected')">Reject</button>` : ''}
                         </div>
                     </td>
@@ -274,7 +272,7 @@
                     <td>${t.time}</td>
                     <td><span class="${badgeClass}">${t.status}</span></td>
                     <td>
-                        ${t.status === 'Open' ? `<button class="btn btn-approve" onclick="resolveTicket(${t.id})">Mark Resolved</button>` : '<span>Closed</span>'}
+                        ${t.status === 'Open' ? `<button class="btn btn-approve" onclick="resolveTicket(${t.id})">Resolve</button>` : '<span>Closed</span>'}
                     </td>
                 `;
                 tBody.appendChild(tr);
@@ -320,7 +318,7 @@
         const res = await fetch(`/api/admin/user-history?userId=${userId}`);
         const data = await res.json();
         if (data.success) {
-            document.getElementById('modalUserName').innerText = `${data.user.name}'s Detailed Profile`;
+            document.getElementById('modalUserName').innerText = `${data.user.name}'s Profile & History`;
             document.getElementById('modalUserDetails').innerHTML = `
                 <p><b>Email / Phone:</b> ${data.user.phone}</p>
                 <p><b>Wallet Balance:</b> ₹${data.user.wallet_balance} | <b>Total Invested:</b> ₹${data.user.total_invested}</p>
@@ -341,7 +339,6 @@
         const query = document.getElementById('globalSearch').value.toLowerCase();
         if (!cachedAdminData) return;
         
-        // Filter Recharges
         const filteredRecharges = cachedAdminData.recharges.filter(r => 
             (r.user_name && r.user_name.toLowerCase().includes(query)) ||
             (r.utr && r.utr.toLowerCase().includes(query)) ||
@@ -349,7 +346,6 @@
         );
         renderRecharges(filteredRecharges);
 
-        // Filter Users
         const filteredUsers = cachedAdminData.users.filter(u =>
             (u.fullname && u.fullname.toLowerCase().includes(query)) ||
             (u.email && u.email.toLowerCase().includes(query))
@@ -404,7 +400,6 @@
 
     function adminLogout() { window.location.href = '/'; }
 
-    // ⚡ Real-Time Instant Live Stream Auto-Refresh
     function initAdminLiveStream() {
         const sse = new EventSource('/api/live-stream?userId=admin');
         sse.onmessage = function(event) {
