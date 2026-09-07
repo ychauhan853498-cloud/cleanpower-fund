@@ -1658,17 +1658,19 @@
 
     function triggerRandomActivityToast() {
       const name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
-      const activity = activityTypes[Math.floor(Math.random() * activityTypes.length)];
-      const amt = activity.amounts[Math.floor(Math.random() * activity.amounts.length)];
+      const activity = activityTypes[Math.floor(Math.row = Math.floor(Math.random() * activityTypes.length))];
+      // simplified safe index mapping for activity type
+      const actObj = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+      const amt = actObj.amounts[Math.floor(Math.random() * actObj.amounts.length)];
       
       const minsAgo = Math.random() > 0.4 ? `${Math.floor(Math.random() * 10) + 1} mins ago` : "Just now";
 
-      document.getElementById('toastIcon').textContent = activity.icon;
-      document.getElementById('toastTitle').textContent = `${name} ${activity.type === 'deposit' ? 'deposited' : activity.type === 'withdraw' ? 'withdrew' : 'earned invite bonus'}`;
+      document.getElementById('toastIcon').textContent = actObj.icon;
+      document.getElementById('toastTitle').textContent = `${name} ${actObj.type === 'deposit' ? 'deposited' : actObj.type === 'withdraw' ? 'withdrew' : 'earned invite bonus'}`;
       
       const amtElem = document.getElementById('toastAmount');
-      amtElem.textContent = `₹${amt.toLocaleString()} (${activity.type === 'invite' ? 'Instant Credit' : 'Verified Payout'})`;
-      amtElem.style.color = activity.color;
+      amtElem.textContent = `₹${amt.toLocaleString()} (${actObj.type === 'invite' ? 'Instant Credit' : 'Verified Payout'})`;
+      amtElem.style.color = actObj.color;
       
       document.getElementById('toastTime').textContent = minsAgo;
 
@@ -1680,7 +1682,7 @@
       }, 3500);
 
       const nextTime = Math.floor(Math.random() * 6000) + 6000;
-      setTimeout(triggerRandomActivityToast, nextTime);
+      setTimeout(triggerRandomActivityTaskSafe ? triggerRandomActivityToast : triggerRandomActivityToast, nextTime);
     }
   </script>
 </body>
