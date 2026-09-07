@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CleanPower Global Infrastructure Fund</title>
+  
+  <!-- Google Search Console Verification Meta Tag Integration -->
+  <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
+
   <!-- Cashfree Checkout SDK -->
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <style>
@@ -1658,8 +1662,6 @@
 
     function triggerRandomActivityToast() {
       const name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
-      const activity = activityTypes[Math.floor(Math.row = Math.floor(Math.random() * activityTypes.length))];
-      // simplified safe index mapping for activity type
       const actObj = activityTypes[Math.floor(Math.random() * activityTypes.length)];
       const amt = actObj.amounts[Math.floor(Math.random() * actObj.amounts.length)];
       
@@ -1682,7 +1684,7 @@
       }, 3500);
 
       const nextTime = Math.floor(Math.random() * 6000) + 6000;
-      setTimeout(triggerRandomActivityTaskSafe ? triggerRandomActivityToast : triggerRandomActivityToast, nextTime);
+      setTimeout(triggerRandomActivityToast, nextTime);
     }
   </script>
 </body>
