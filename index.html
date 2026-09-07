@@ -65,6 +65,11 @@
     .alloc-wind { background: #0ea5e9; width: 25%; transition: width 1s ease; }
     .alloc-hydro { background: #10b981; width: 15%; transition: width 1s ease; }
 
+    .portfolio-breakdown-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+    .portfolio-stat-card { background: #070d1d; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+    .portfolio-stat-card span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block; }
+    .portfolio-stat-card b { font-size: 12px; color: var(--text-main); margin-top: 4px; display: block; }
+
     .auth-box { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; margin-top: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
     .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
     .auth-tab { flex: 1; padding: 12px; background: none; border: none; color: var(--text-muted); font-weight: 700; cursor: pointer; font-size: 13px; transition: color 0.2s; }
@@ -272,18 +277,33 @@
 
         <div class="analytics-card">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:800;">
-            <span>📈 Portfolio Allocation</span>
-            <span style="font-size:11px; color:var(--accent);">Diversified Energy Fund</span>
+            <span>📈 Portfolio Allocation & Breakdown</span>
+            <span style="font-size:11px; color:var(--accent);">Live Energy Fund</span>
           </div>
           <div class="allocation-bar">
-            <div class="alloc-solar" title="Solar Array (60%)"></div>
-            <div class="alloc-wind" title="Microgrid Wind (25%)"></div>
-            <div class="alloc-hydro" title="Hydro Facility (15%)"></div>
+            <div class="alloc-solar" id="barSolar" title="Solar Array" style="width: 60%;"></div>
+            <div class="alloc-wind" id="barWind" title="Microgrid Wind" style="width: 25%;"></div>
+            <div class="alloc-hydro" id="barHydro" title="Hydro Facility" style="width: 15%;"></div>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted);">
-            <span>☀️ Solar Arrays (60%)</span>
-            <span>💨 Wind Grids (25%)</span>
-            <span>💧 Hydro (15%)</span>
+            <span>☀️ Solar (<span id="pctSolar">60</span>%)</span>
+            <span>💨 Wind (<span id="pctWind">25</span>%)</span>
+            <span>💧 Hydro (<span id="pctHydro">15</span>%)</span>
+          </div>
+
+          <div class="portfolio-breakdown-grid">
+            <div class="portfolio-stat-card">
+              <span>Solar Capital</span>
+              <b id="amtSolar">₹0</b>
+            </div>
+            <div class="portfolio-stat-card">
+              <span>Wind Capital</span>
+              <b id="amtWind">₹0</b>
+            </div>
+            <div class="portfolio-stat-card">
+              <span>Hydro Capital</span>
+              <b id="amtHydro">₹0</b>
+            </div>
           </div>
         </div>
 
@@ -1025,6 +1045,43 @@
           document.getElementById('statAum').textContent = `₹${(data.platformStats.totalAum / 100000).toFixed(2)} Lakhs`;
           document.getElementById('statPayouts').textContent = `₹${(data.platformStats.totalPayouts / 100000).toFixed(2)} Lakhs`;
         }
+
+        // Dynamic Portfolio Allocation Calculation
+        let solarTotal = 0;
+        let windTotal = 0;
+        let hydroTotal = 0;
+
+        if (data.myPlans && data.myPlans.length > 0) {
+          data.myPlans.forEach(p => {
+            const nameLower = p.plan_name.toLowerCase();
+            if (nameLower.includes('wind') || nameLower.includes('turbine')) {
+              windTotal += p.cost;
+            } else if (nameLower.includes('hydro')) {
+              hydroTotal += p.cost;
+            } else {
+              solarTotal += p.cost;
+            }
+          });
+        } else {
+          solarTotal = 600; windTotal = 250; hydroTotal = 150;
+        }
+
+        const totalAllocated = solarTotal + windTotal + hydroTotal || 1;
+        const pSolar = Math.round((solarTotal / totalAllocated) * 100);
+        const pWind = Math.round((windTotal / totalAllocated) * 100);
+        const pHydro = 100 - pSolar - pWind;
+
+        document.getElementById('barSolar').style.width = `${pSolar}%`;
+        document.getElementById('barWind').style.width = `${pWind}%`;
+        document.getElementById('barHydro').style.width = `${pHydro}%`;
+
+        document.getElementById('pctSolar').textContent = pSolar;
+        document.getElementById('pctWind').textContent = pWind;
+        document.getElementById('pctHydro').textContent = pHydro;
+
+        document.getElementById('amtSolar').textContent = `₹${solarTotal.toLocaleString()}`;
+        document.getElementById('amtWind').textContent = `₹${windTotal.toLocaleString()}`;
+        document.getElementById('amtHydro').textContent = `₹${hydroTotal.toLocaleString()}`;
 
         const invested = data.user.total_invested || 0;
         let nextTarget = 2500;
