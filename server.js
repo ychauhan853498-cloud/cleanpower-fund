@@ -89,6 +89,15 @@ const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
       status TEXT DEFAULT 'Open',
       time TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      title TEXT,
+      message TEXT,
+      time TEXT,
+      is_read INTEGER DEFAULT 0
+    );
   `);
 })();
 
@@ -303,6 +312,19 @@ app.get('/api/dashboard', async (req, res) => {
   });
 });
 
+app.get('/api/notifications', async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) return res.status(400).json({ error: "User ID required." });
+  const notes = await db.all('SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 20', [userId]);
+  res.json({ success: true, notifications: notes });
+});
+
+app.post('/api/notifications/read', async (req, res) => {
+  const { userId } = req.body;
+  await db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ?', [userId]);
+  res.json({ success: true });
+});
+
 app.post('/api/complete-task', async (req, res) => {
   const { userId, taskId, reward } = req.body;
   const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
@@ -371,11 +393,11 @@ app.post('/api/buy-plan', async (req, res) => {
 });
 
 app.post('/api/create-payment-order', async (req, res) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, utr } = req.body;
   const dep = Number(amount);
   if (!dep || dep < 200) return res.status(400).json({ error: "Minimum deposit is ₹200." });
 
-  const utrRef = 'UTR_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const utrRef = utr || ('UTR_' + Date.now());
   const timeNow = new Date().toLocaleTimeString();
 
   await db.run('INSERT INTO recharge_requests (user_id, amount, utr, time, status) VALUES (?, ?, ?, ?, "Pending")', [userId, dep, utrRef, timeNow]);
@@ -462,15 +484,33 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 app.post('/api/admin/recharge-action', async (req, res) => {
   const { requestId, action } = req.body;
   const reqData = await db.get('SELECT * FROM recharge_requests WHERE id = ?', [requestId]);
+  if (!reqData) return res.status(404).json({ error: "Request not found." });
+  
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
     await db.run('UPDATE recharge_requests SET status = "Approved" WHERE id = ?', [requestId]);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.amount, reqData.user_id]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `DEPOSIT APPROVED`, reqData.amount, timeNow, 'Settled']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Deposit Approved ⚡", 
+      `Your deposit of ₹${reqData.amount} has been successfully credited to your wallet.`, 
+      timeNow
+    ]);
+
     res.json({ message: "Deposit approved & credited to user wallet." });
   } else {
     await db.run('UPDATE recharge_requests SET status = "Rejected" WHERE id = ?', [requestId]);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Deposit Rejected ❌", 
+      `Your deposit request of ₹${reqData.amount} was rejected by admin.`, 
+      timeNow
+    ]);
+
     res.json({ message: "Deposit rejected." });
   }
 });
@@ -478,16 +518,34 @@ app.post('/api/admin/recharge-action', async (req, res) => {
 app.post('/api/admin/withdraw-action', async (req, res) => {
   const { requestId, action } = req.body;
   const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
+  if (!reqData) return res.status(404).json({ error: "Request not found." });
+
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
     await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Withdrawal Settled 🏦", 
+      `Your withdrawal of ₹${reqData.net_amount} has been sent to your UPI ID.`, 
+      timeNow
+    ]);
+
     res.json({ message: "Withdrawal settled." });
   } else {
     await db.run('UPDATE withdrawal_requests SET status = "Rejected" WHERE id = ?', [requestId]);
     await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.gross_amount, reqData.user_id]);
     await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL REFUNDED`, reqData.gross_amount, timeNow, 'Refunded']);
+    
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
+      reqData.user_id, 
+      "Withdrawal Refunded ⚠️", 
+      `Your withdrawal of ₹${reqData.gross_amount} was rejected. Funds have been refunded to your wallet.`, 
+      timeNow
+    ]);
+
     res.json({ message: "Withdrawal rejected & refunded." });
   }
 });
