@@ -208,6 +208,46 @@
       transform: scale(0.95);
       background: rgba(255, 255, 255, 0.3);
     }
+
+    /* Live Social Proof Toast Animation */
+    #liveToast {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent-green);
+      border-radius: 14px;
+      padding: 12px 16px;
+      z-index: 150;
+      max-width: 320px;
+      margin: 0 auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateY(150%);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+      pointer-events: none;
+    }
+    #liveToast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast-icon {
+      font-size: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -712,6 +752,16 @@
         </div>
       </div>
 
+      <!-- Live Activity Toast Popup -->
+      <div id="liveToast">
+        <div class="toast-icon" id="toastIcon">⚡</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 800; color: var(--text-main);" id="toastTitle">Rahul S. deposited</div>
+          <div style="font-size: 11px; color: var(--accent-green); font-weight: 700;" id="toastAmount">₹2,500 successfully</div>
+          <div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;" id="toastTime">Just now</div>
+        </div>
+      </div>
+
     </div>
 
     <nav class="bottom-bar">
@@ -812,6 +862,7 @@
       if (ref) { switchAuth('reg'); document.getElementById('regRef').value = ref; }
       drawSpinWheel();
       startApp();
+      setTimeout(triggerRandomActivityToast, 3000);
     });
 
     function switchAuth(m) {
@@ -1505,6 +1556,46 @@
       const data = await res.json();
       if (!res.ok) alert(data.error);
       else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
+    }
+
+    // Realistic Dynamic Activity Generator
+    const sampleNames = [
+      "Rahul S.", "Amit K.", "Priya M.", "Vikram R.", "Ankit P.", 
+      "Neha G.", "Deepak T.", "Sunil V.", "Pooja B.", "Manish D.",
+      "Rohit N.", "Kiran J.", "Aakash L.", "Sanjay K.", "Meenakshi S."
+    ];
+
+    const activityTypes = [
+      { type: "deposit", icon: "⚡", text: "completed a recharge of", amounts: [500, 1000, 2500, 5000, 10000], color: "var(--accent-green)" },
+      { type: "withdraw", icon: "🏦", text: "successfully withdrew", amounts: [1200, 3400, 5000, 8200, 15000], color: "var(--accent)" },
+      { type: "invite", icon: "👥", text: "invited a new member & earned", amounts: [250, 500, 750], color: "var(--accent-yellow)" }
+    ];
+
+    function triggerRandomActivityToast() {
+      const name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+      const activity = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+      const amt = activity.amounts[Math.floor(Math.random() * activity.amounts.length)];
+      
+      const minsAgo = Math.random() > 0.4 ? `${Math.floor(Math.random() * 10) + 1} mins ago` : "Just now";
+
+      document.getElementById('toastIcon').textContent = activity.icon;
+      document.getElementById('toastTitle').textContent = `${name} ${activity.type === 'deposit' ? 'deposited' : activity.type === 'withdraw' ? 'withdrew' : 'earned invite bonus'}`;
+      
+      const amtElem = document.getElementById('toastAmount');
+      amtElem.textContent = `₹${amt.toLocaleString()} (${activity.type === 'invite' ? 'Instant Credit' : 'Verified Payout'})`;
+      amtElem.style.color = activity.color;
+      
+      document.getElementById('toastTime').textContent = minsAgo;
+
+      const toast = document.getElementById('liveToast');
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+
+      const nextTime = Math.floor(Math.random() * 6000) + 6000;
+      setTimeout(triggerRandomActivityToast, nextTime);
     }
   </script>
 </body>
