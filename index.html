@@ -78,7 +78,8 @@
     .wallet-stats div:last-child { text-align: right; }
     .wallet-stats span { display: block; font-size: 15px; font-weight: 800; color: white; margin-top: 4px; }
     .wallet-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .btn-w { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; text-align: center; font-size: 13px; }
+    .btn-w { background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; text-align: center; font-size: 13px; transition: 0.2s; }
+    .btn-w:active { transform: scale(0.97); }
 
     .checkin-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
     .btn-checkin { background: var(--accent-yellow); color: #000; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 12px; cursor: pointer; }
@@ -96,7 +97,8 @@
     .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #070d1d; padding: 12px; border-radius: 12px; margin-bottom: 16px; font-size: 11px; color: var(--text-muted); text-align: center; border: 1px solid var(--border); }
     .plan-grid b { display: block; font-size: 14px; color: var(--text-main); margin-top: 4px; font-weight: 800; }
     .green { color: var(--accent-green) !important; }
-    .btn-invest { width: 100%; background: var(--accent-green); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; }
+    .btn-invest { width: 100%; background: var(--accent-green); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .btn-invest:active { transform: scale(0.98); }
 
     .floating-support-container { position: fixed; right: 16px; bottom: 85px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
     .float-btn { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); cursor: pointer; text-decoration: none; border: 2px solid rgba(255,255,255,0.2); }
@@ -122,14 +124,19 @@
     .gateway-tab { flex: 1; padding: 10px; background: #070d1d; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-weight: 700; font-size: 11px; cursor: pointer; text-align: center; }
     .gateway-tab.active { background: rgba(14, 165, 233, 0.15); border-color: var(--accent); color: var(--accent); }
 
-    .deposit-radar { position: relative; width: 90px; height: 90px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; }
+    .deposit-radar { position: relative; width: 80px; height: 80px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; }
     .deposit-radar::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); animation: radarPulse 1.8s infinite ease-out; }
     .deposit-radar::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent-green); animation: radarPulse 1.8s infinite ease-out 0.9s; }
-    .radar-core { width: 44px; height: 44px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; box-shadow: 0 0 15px var(--accent); }
+    .radar-core { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 2; box-shadow: 0 0 15px var(--accent); }
     @keyframes radarPulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
-    .custom-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-    .custom-modal-content { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+    /* Modal Animation Enhancements */
+    @keyframes modalPopIn {
+      0% { transform: scale(0.85) translateY(20px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .custom-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease-out; }
+    .custom-modal-content { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 420px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.9); animation: modalPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   </style>
 </head>
 <body>
@@ -512,78 +519,85 @@
       </div>
 
       <!-- SUPPORT POPUP MODAL -->
-      <div id="supportModal" style="display:none; background:var(--bg-surface); border:1px solid var(--border); border-radius:18px; padding:20px; margin-top:20px; box-shadow: 0 15px 30px rgba(0,0,0,0.7);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <h3 style="margin:0; color:var(--accent); font-size:15px; font-weight: 900;">🎧 24/7 Member Help Desk</h3>
-          <span onclick="closeSupportModal()" style="cursor:pointer; color:var(--text-muted); font-size:16px; font-weight: bold;">✕</span>
-        </div>
-        <div class="support-card" style="border-left: 4px solid #25D366; margin-bottom: 0;">
-          <div>
-            <b style="color:white; display:block; font-size:13px;">WhatsApp Direct Desk</b>
-            <span style="font-size:11px; color:#25D366; font-weight:800;">+91 8534980497</span>
+      <div id="supportModal" class="custom-modal">
+        <div class="custom-modal-content">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; color:var(--accent); font-size:15px; font-weight: 900;">🎧 24/7 Member Help Desk</h3>
+            <span onclick="closeSupportModal()" style="cursor:pointer; color:var(--text-muted); font-size:16px; font-weight: bold;">✕</span>
           </div>
-          <a href="https://wa.me/918534980497?text=Hello%20Support" target="_blank" class="support-link-btn" style="background:#25D366;">Open Chat</a>
+          <div class="support-card" style="display:flex; justify-content:space-between; align-items:center; background:#070d1d; padding:14px; border-radius:12px; border:1px solid var(--border);">
+            <div>
+              <b style="color:white; display:block; font-size:13px;">WhatsApp Direct Desk</b>
+              <span style="font-size:11px; color:#25D366; font-weight:800;">+91 8534980497</span>
+            </div>
+            <a href="https://wa.me/918534980497?text=Hello%20Support" target="_blank" class="support-link-btn" style="background:#25D366; color:white; padding:8px 14px; border-radius:8px; font-weight:bold; font-size:12px; text-decoration:none;">Open Chat</a>
+          </div>
         </div>
       </div>
 
-      <!-- FINANCIAL ACTION MODAL -->
-      <div id="actionModal" style="display:none; background:var(--bg-surface); border:1px solid var(--border); border-radius:20px; padding:22px; margin-top:20px; box-shadow: 0 15px 30px rgba(0,0,0,0.7);">
-        <h3 id="modalHead" style="margin-top:0; font-size:16px; font-weight:900; color:var(--text-main);">Financial Action</h3>
-        
-        <div id="depositSection" style="display:none;">
-          <div class="gateway-tabs">
-            <div class="gateway-tab active" id="tabUpi" onclick="switchGatewayMode('UPI')">⚡ Instant UPI</div>
-            <div class="gateway-tab" id="tabCard" onclick="switchGatewayMode('CARD')">💳 Cards</div>
-            <div class="gateway-tab" id="tabNet" onclick="switchGatewayMode('NET')">🏦 NetBanking</div>
+      <!-- FINANCIAL ACTION MODAL (Animated Deposit & Withdrawal) -->
+      <div id="actionModal" class="custom-modal">
+        <div class="custom-modal-content">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 id="modalHead" style="margin:0; font-size:16px; font-weight:900; color:var(--text-main);">Financial Action</h3>
+            <span onclick="closeModal()" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;">
-            <button type="button" onclick="setDepositAmount(500)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹500</button>
-            <button type="button" onclick="setDepositAmount(1000)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹1,000</button>
-            <button type="button" onclick="setDepositAmount(5000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹5,000</button>
-            <button type="button" onclick="setDepositAmount(10000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹10k</button>
+          <!-- Deposit Section -->
+          <div id="depositSection" style="display:none;">
+            <div class="gateway-tabs">
+              <div class="gateway-tab active" id="tabUpi" onclick="switchGatewayMode('UPI')">⚡ Instant UPI</div>
+              <div class="gateway-tab" id="tabCard" onclick="switchGatewayMode('CARD')">💳 Cards</div>
+              <div class="gateway-tab" id="tabNet" onclick="switchGatewayMode('NET')">🏦 NetBanking</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;">
+              <button type="button" onclick="setDepositAmount(500)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹500</button>
+              <button type="button" onclick="setDepositAmount(1000)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹1,000</button>
+              <button type="button" onclick="setDepositAmount(5000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹5,000</button>
+              <button type="button" onclick="setDepositAmount(10000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹10k</button>
+            </div>
+
+            <input type="number" id="depositAmount" placeholder="Enter Deposit Amount (Min ₹200)" oninput="updateDepositBreakdown()" />
+            
+            <div id="gatewayInfoBox" style="background:#070d1d; padding:12px; border-radius:10px; margin-bottom:14px; font-size:11px; color:var(--text-muted); border:1px solid var(--border);">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Merchant VPA:</span>
+                <b style="color:var(--accent-yellow);">cleanpower@slc</b>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span>Processing Fee:</span>
+                <b style="color:var(--accent-green);">FREE (0%)</b>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:4px; margin-top:4px;">
+                <span style="color:var(--text-main); font-weight:700;">Net Wallet Credit:</span>
+                <b style="color:var(--accent-green);" id="netCreditDisplay">₹0.00</b>
+              </div>
+            </div>
+
+            <div id="depositProcessingState" style="display:none; text-align:center; padding: 20px 0; background:#070d1d; border-radius:12px; border:1px solid var(--border); margin-bottom:14px;">
+              <div class="deposit-radar">
+                <div class="radar-core">⚡</div>
+              </div>
+              <div style="color: var(--accent); font-weight: 800; font-size: 13px;" id="depositStatusText">Transmitting Deposit Payload to Admin Queue...</div>
+              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Awaiting merchant verification & approval</div>
+            </div>
+
+            <button type="button" id="payNowBtn" onclick="launchEnterpriseGateway()" style="width:100%; background:var(--accent-green); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+              🔒 Submit Deposit for Approval
+            </button>
           </div>
 
-          <input type="number" id="depositAmount" placeholder="Enter Deposit Amount (Min ₹200)" oninput="updateDepositBreakdown()" />
-          
-          <div id="gatewayInfoBox" style="background:#070d1d; padding:12px; border-radius:10px; margin-bottom:14px; font-size:11px; color:var(--text-muted); border:1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>Merchant VPA:</span>
-              <b style="color:var(--accent-yellow);">cleanpower@slc</b>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span>Processing Fee:</span>
-              <b style="color:var(--accent-green);">FREE (0%)</b>
-            </div>
-            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:4px; margin-top:4px;">
-              <span style="color:var(--text-main); font-weight:700;">Net Wallet Credit:</span>
-              <b style="color:var(--accent-green);" id="netCreditDisplay">₹0.00</b>
-            </div>
+          <!-- Withdrawal Section -->
+          <div id="withdrawSection" style="display:none;">
+            <input type="number" id="withdrawAmount" placeholder="Enter Withdrawal Amount (Min ₹200)" />
+            <input type="text" id="withdrawUpi" placeholder="Destination UPI ID (e.g. mobile@upi)" />
+            <input type="password" id="withdrawPin" maxlength="6" placeholder="Enter 6-Digit Security PIN" />
+            <button type="button" onclick="submitWithdrawalRequest()" style="width:100%; margin-top:4px; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px;">
+              Authorize Capital Settlement
+            </button>
           </div>
-
-          <div id="depositProcessingState" style="display:none; text-align:center; padding: 20px 0; background:#070d1d; border-radius:12px; border:1px solid var(--border); margin-bottom:14px;">
-            <div class="deposit-radar">
-              <div class="radar-core">⚡</div>
-            </div>
-            <div style="color: var(--accent); font-weight: 800; font-size: 13px;" id="depositStatusText">Transmitting Deposit Payload to Admin Queue...</div>
-            <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Awaiting merchant verification & approval</div>
-          </div>
-
-          <button type="button" id="payNowBtn" onclick="launchEnterpriseGateway()" style="width:100%; background:var(--accent-green); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-            🔒 Submit Deposit for Approval
-          </button>
         </div>
-
-        <div id="withdrawSection" style="display:none;">
-          <input type="number" id="withdrawAmount" placeholder="Enter Withdrawal Amount (Min ₹200)" />
-          <input type="text" id="withdrawUpi" placeholder="Destination UPI ID (e.g. mobile@upi)" />
-          <input type="password" id="withdrawPin" maxlength="6" placeholder="Enter 6-Digit Security PIN" />
-          <button type="button" onclick="submitWithdrawalRequest()" style="width:100%; margin-top:4px; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px;">
-            Authorize Capital Settlement
-          </button>
-        </div>
-
-        <button onclick="closeModal()" style="width:100%; background:none; border:none; color:var(--text-muted); margin-top:14px; cursor:pointer; font-weight:700; font-size:12px;">Dismiss</button>
       </div>
 
     </div>
@@ -735,7 +749,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("OTP generated! Check Render logs for code.");
+        alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);
@@ -764,7 +778,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        alert("OTP generated! Check Render logs for code.");
+        alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
         console.error("Email OTP error:", error);
@@ -1054,10 +1068,10 @@
       const depositSec = document.getElementById('depositSection');
       const withdrawSec = document.getElementById('withdrawSection');
 
-      modal.style.display = 'block';
+      modal.style.display = 'flex';
 
       if (type === 'deposit') {
-        head.textContent = 'Add Funds (Pending Admin Verification)';
+        head.textContent = 'Add Funds (Instant Recharge)';
         depositSec.style.display = 'block';
         withdrawSec.style.display = 'none';
         document.getElementById('depositAmount').value = '';
@@ -1070,7 +1084,7 @@
           switchNav('support');
           return alert("Please configure your 6-digit Security PIN first.");
         }
-        head.textContent = 'Disinvestment Settlement (VIP Fee Active)';
+        head.textContent = 'Disinvestment Settlement & Withdrawal';
         depositSec.style.display = 'none';
         withdrawSec.style.display = 'block';
         document.getElementById('withdrawAmount').value = '';
@@ -1179,7 +1193,7 @@
 
     function copyReferralCode() { navigator.clipboard.writeText(currentRefCode).then(() => { alert("Code copied!"); }); }
 
-    function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'block'; }
+    function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'flex'; }
     function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
 
     const segments = [{ label: "₹10", color: "#1e3a8a" }, { label: "₹25", color: "#065f46" }, { label: "Try Again", color: "#374151" }, { label: "₹50", color: "#b45309" }, { label: "₹5", color: "#0284c7" }, { label: "₹100", color: "#7c3aed" }];

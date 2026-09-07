@@ -179,7 +179,6 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// Brevo HTTP API Email OTP Route (With built-in .trim() protection)
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
@@ -427,127 +426,6 @@ app.post('/api/withdraw', async (req, res) => {
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `WITHDRAWAL QUEUED`, -wAmt, timeNow, 'Pending Approval']);
 
   res.json({ message: `Withdrawal submitted! Net ₹${netPayable} queued for payout (${feePct * 100}% fee).` });
-});
-
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'admin' && password === 'admin@123') res.json({ success: true });
-  else res.status(401).json({ error: "Invalid credentials." });
-});
-
-app.get('/api/admin/overview', async (req, res) => {
-  const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
-  const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
-  res.json({ recharges, withdrawals });
-});
-
-app.get('/api/admin/users', async (req, res) => {
-  try {
-    const users = await db.all(`
-      SELECT 
-        id, 
-        name AS fullname, 
-        phone AS email, 
-        wallet_balance AS deposit_amount, 
-        'Active' AS status, 
-        '-' AS created_at 
-      FROM user 
-      ORDER BY id DESC
-    `);
-    res.json({ success: true, users });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.put('/api/admin/users/:id', async (req, res) => {
-  const userId = req.params.id;
-  const { wallet_balance, status } = req.body;
-  try {
-    await db.run("UPDATE user SET wallet_balance = COALESCE(?, wallet_balance) WHERE id = ?", [wallet_balance, userId]);
-    res.json({ success: true, message: "User updated successfully" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.delete('/api/admin/users/:id', async (req, res) => {
-  const userId = req.params.id;
-  try {
-    await db.run("DELETE FROM user WHERE id = ?", [userId]);
-    res.json({ success: true, message: "User deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/admin/recharge-action', async (req, res) => {
-  const { requestId, action } = req.body;
-  const reqData = await db.get('SELECT * FROM recharge_requests WHERE id = ?', [requestId]);
-  if (!reqData) return res.status(404).json({ error: "Request not found." });
-  
-  const timeNow = new Date().toLocaleTimeString();
-
-  if (action === 'approve') {
-    await db.run('UPDATE recharge_requests SET status = "Approved" WHERE id = ?', [requestId]);
-    await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.amount, reqData.user_id]);
-    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `DEPOSIT APPROVED`, reqData.amount, timeNow, 'Settled']);
-    
-    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
-      reqData.user_id, 
-      "Deposit Approved ⚡", 
-      `Your deposit of ₹${reqData.amount} has been successfully credited to your wallet.`, 
-      timeNow
-    ]);
-
-    res.json({ message: "Deposit approved & credited to user wallet." });
-  } else {
-    await db.run('UPDATE recharge_requests SET status = "Rejected" WHERE id = ?', [requestId]);
-    
-    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
-      reqData.user_id, 
-      "Deposit Rejected ❌", 
-      `Your deposit request of ₹${reqData.amount} was rejected by admin.`, 
-      timeNow
-    ]);
-
-    res.json({ message: "Deposit rejected." });
-  }
-});
-
-app.post('/api/admin/withdraw-action', async (req, res) => {
-  const { requestId, action } = req.body;
-  const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
-  if (!reqData) return res.status(404).json({ error: "Request not found." });
-
-  const timeNow = new Date().toLocaleTimeString();
-
-  if (action === 'approve') {
-    await db.run('UPDATE withdrawal_requests SET status = "Settled" WHERE id = ?', [requestId]);
-    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL SETTLED`, 0, timeNow, 'Settled']);
-    
-    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
-      reqData.user_id, 
-      "Withdrawal Settled 🏦", 
-      `Your withdrawal of ₹${reqData.net_amount} has been sent to your UPI ID.`, 
-      timeNow
-    ]);
-
-    res.json({ message: "Withdrawal settled." });
-  } else {
-    await db.run('UPDATE withdrawal_requests SET status = "Rejected" WHERE id = ?', [requestId]);
-    await db.run('UPDATE user SET wallet_balance = wallet_balance + ? WHERE id = ?', [reqData.gross_amount, reqData.user_id]);
-    await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [reqData.user_id, `WITHDRAWAL REFUNDED`, reqData.gross_amount, timeNow, 'Refunded']);
-    
-    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [
-      reqData.user_id, 
-      "Withdrawal Refunded ⚠️", 
-      `Your withdrawal of ₹${reqData.gross_amount} was rejected. Funds have been refunded to your wallet.`, 
-      timeNow
-    ]);
-
-    res.json({ message: "Withdrawal rejected & refunded." });
-  }
 });
 
 const PORT = process.env.PORT || 5000;
