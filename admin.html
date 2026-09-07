@@ -38,7 +38,7 @@
 <div class="container">
     <h2>
         <span>Enterprise Admin Portal - CleanPower Fund</span>
-        <div class="live-indicator"><div class="live-dot"></div> Live Admin Feed</div>
+        <div class="live-indicator"><div class="live-dot"></div> Live Admin Feed Active</div>
     </h2>
     
     <div class="stats-box">
@@ -55,6 +55,7 @@
     <div class="controls">
         <div class="btn-group">
             <button class="btn" onclick="loadAdminData()">Refresh Live Data</button>
+            <button class="btn" style="background:#ef4444;" onclick="adminLogout()">Sign Out</button>
         </div>
     </div>
 
@@ -94,6 +95,24 @@
             <tr><td colspan="8" style="text-align: center; color: #94a3b8;">Loading withdrawal queue...</td></tr>
         </tbody>
     </table>
+
+    <div class="section-title">👥 Registered Users & KYC Directory</div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name & Email</th>
+                <th>Wallet Balance</th>
+                <th>Invested</th>
+                <th>VIP / PIN</th>
+                <th>KYC Details</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="usersTableBody">
+            <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Loading user directory...</td></tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
@@ -102,13 +121,35 @@
             const res = await fetch('/api/admin/overview');
             const data = await res.json();
 
-            // Load Users Count
+            // Load Users Directory & Stats
             const userRes = await fetch('/api/admin/users');
             const userData = await userRes.json();
             if (userData.success && userData.users) {
                 document.getElementById('totalUsers').innerText = userData.users.length;
-                let totalDep = userData.users.reduce((sum, u) => sum + Number(u.deposit_amount || 0), 0);
+                let totalDep = userData.users.reduce((sum, u) => sum + Number(u.wallet_balance || 0), 0);
                 document.getElementById('totalDeposits').innerText = '₹' + totalDep.toFixed(2);
+
+                const uBody = document.getElementById('usersTableBody');
+                uBody.innerHTML = '';
+                userData.users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>#${u.id}</td>
+                        <td><strong>${u.fullname}</strong><br><small style="color:#94a3b8">${u.email}</small></td>
+                        <td style="color:#10b981; font-weight:bold;">₹${u.wallet_balance}</td>
+                        <td>₹${u.total_invested}</td>
+                        <td>VIP ${u.vip_level}<br><small>${u.txn_pin ? 'PIN Set ✓' : 'No PIN ⚠'}</small></td>
+                        <td>
+                            <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : 'badge'}">${u.kyc_status}</span><br>
+                            <small style="color:#94a3b8;">Aadhaar: ${u.aadhaar || 'N/A'}<br>PAN: ${u.pan || 'N/A'}</small>
+                        </td>
+                        <td>
+                            <button class="btn btn-approve" onclick="adjustUserBalance(${u.id}, ${u.wallet_balance})">Edit Balance</button>
+                            <button class="btn btn-reject" onclick="deleteUser(${u.id})">Delete</button>
+                        </td>
+                    `;
+                    uBody.appendChild(tr);
+                });
             }
 
             // Render Recharges / Deposits
@@ -182,9 +223,7 @@
             const data = await res.json();
             alert(data.message);
             loadAdminData();
-        } catch (err) {
-            alert("Action failed.");
-        }
+        } catch (err) { alert("Action failed."); }
     }
 
     async function handleWithdrawal(requestId, action) {
@@ -198,12 +237,37 @@
             const data = await res.json();
             alert(data.message);
             loadAdminData();
-        } catch (err) {
-            alert("Action failed.");
-        }
+        } catch (err) { alert("Action failed."); }
     }
 
-    // Real-time SSE listener for admin overview feed
+    async function adjustUserBalance(userId, currentBalance) {
+        const newBal = prompt("Enter new wallet balance (₹):", currentBalance);
+        if (newBal === null) return;
+        try {
+            const res = await fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wallet_balance: Number(newBal) })
+            });
+            const data = await res.json();
+            alert(data.message);
+            loadAdminData();
+        } catch(e) { alert("Failed to update balance."); }
+    }
+
+    async function deleteUser(userId) {
+        if (!confirm("Are you sure you want to delete this user?")) return;
+        try {
+            const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            loadAdminData();
+        } catch(e) { alert("Failed to delete user."); }
+    }
+
+    function adminLogout() { window.location.href = '/'; }
+
+    // ⚡ Real-Time Instant Live Stream Auto-Refresh
     function initAdminLiveStream() {
         const sse = new EventSource('/api/live-stream?userId=admin');
         sse.onmessage = function(event) {
@@ -219,7 +283,7 @@
 
     loadAdminData();
     initAdminLiveStream();
-    setInterval(loadAdminData, 10000); // Poll backup fallback every 10s
+    setInterval(loadAdminData, 10000); // Polling fallback
 </script>
 
 </body>

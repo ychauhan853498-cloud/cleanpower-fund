@@ -250,14 +250,10 @@ app.post('/api/send-email-otp', async (req, res) => {
     });
 
     const data = await response.json();
-    if (!response.ok) {
-      console.error("Brevo Error Response:", data);
-      throw new Error(data.message || data.code || "Failed to send email via Brevo");
-    }
+    if (!response.ok) throw new Error(data.message || "Failed to send email via Brevo");
 
     res.json({ message: "OTP sent successfully to your email!" });
   } catch (err) {
-    console.error("Brevo API error:", err);
     res.status(500).json({ error: "Failed to send email OTP: " + err.message });
   }
 });
@@ -531,6 +527,7 @@ app.get('/api/admin/overview', async (req, res) => {
   res.json({ recharges, withdrawals });
 });
 
+// 🛡️ Enhanced Admin Users Endpoint with KYC & Full Details
 app.get('/api/admin/users', async (req, res) => {
   try {
     const users = await db.all(`
@@ -538,9 +535,14 @@ app.get('/api/admin/users', async (req, res) => {
         id, 
         name AS fullname, 
         phone AS email, 
-        wallet_balance AS deposit_amount, 
-        'Active' AS status, 
-        '-' AS created_at 
+        wallet_balance, 
+        total_invested,
+        vip_level,
+        kyc_status,
+        aadhaar,
+        pan,
+        txn_pin,
+        'Active' AS status 
       FROM user 
       ORDER BY id DESC
     `);
@@ -552,11 +554,11 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.put('/api/admin/users/:id', async (req, res) => {
   const userId = req.params.id;
-  const { wallet_balance, status } = req.body;
+  const { wallet_balance } = req.body;
   try {
     await db.run("UPDATE user SET wallet_balance = COALESCE(?, wallet_balance) WHERE id = ?", [wallet_balance, userId]);
     notifyUserLive(userId);
-    res.json({ success: true, message: "User updated successfully" });
+    res.json({ success: true, message: "User wallet updated successfully" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
