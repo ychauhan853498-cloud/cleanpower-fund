@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CleanPower Fund - Enterprise Admin Portal</title>
+    <title>CleanPower Fund - Enterprise Admin Control Center</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #030712; color: #f8fafc; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: #0f172a; padding: 30px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .container { max-width: 1280px; margin: auto; background: #0f172a; padding: 30px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
         h2 { color: #0ea5e9; border-bottom: 2px solid #10b981; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .section-title { font-size: 16px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 24px 0 12px 0; letter-spacing: 0.8px; }
-        .stats-box { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-        .card { flex: 1; background: #1e293b; padding: 20px; border-radius: 10px; border-left: 5px solid #10b981; border: 1px solid #334155; }
-        .card h3 { margin: 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
-        .card p { margin: 10px 0 0 0; font-size: 24px; font-weight: bold; color: #10b981; }
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .section-title { font-size: 16px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 24px 0 12px 0; letter-spacing: 0.8px; display: flex; justify-content: space-between; align-items: center; }
+        .stats-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: #1e293b; padding: 18px; border-radius: 10px; border-left: 5px solid #10b981; border: 1px solid #334155; }
+        .card h3 { margin: 0; color: #94a3b8; font-size: 12px; text-transform: uppercase; }
+        .card p { margin: 8px 0 0 0; font-size: 22px; font-weight: bold; color: #10b981; }
+        
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; }
+        .search-bar { padding: 10px 14px; background: #070d1d; border: 1px solid #334155; color: white; border-radius: 8px; width: 280px; font-size: 13px; outline: none; }
+        .search-bar:focus { border-color: #0ea5e9; }
+        
         .btn-group { display: flex; gap: 10px; }
         .btn { background: #0ea5e9; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 8px; font-weight: bold; font-size: 13px; transition: background 0.2s; }
         .btn:hover { background: #0284c7; }
@@ -21,16 +25,27 @@
         .btn-approve:hover { background: #059669; }
         .btn-reject { background: #ef4444; padding: 6px 12px; font-size: 11px; }
         .btn-reject:hover { background: #dc2626; }
+        .btn-secondary { background: #334155; }
+        .btn-secondary:hover { background: #475569; }
+
         table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         th, td { padding: 14px; border-bottom: 1px solid #334155; text-align: left; font-size: 13px; }
         th { background-color: #070d1d; color: #94a3b8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; }
-        tr:hover { background-color: rgba(255,255,255,0.02); }
+        tr:hover { background-color: rgba(255,255,255,0.02); cursor: pointer; }
+        
         .badge { background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-approved { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
         .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+        
         .live-indicator { font-size: 11px; color: #34d399; display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); }
         .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-content { background: #0f172a; border: 1px solid #334155; border-radius: 16px; width: 100%; max-width: 550px; padding: 25px; max-height: 85vh; overflow-y: auto; }
+        .broadcast-box { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 25px; display: flex; gap: 10px; align-items: center; }
+        .broadcast-box input { flex: 1; padding: 10px 14px; background: #070d1d; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 13px; outline: none; }
     </style>
 </head>
 <body>
@@ -41,6 +56,7 @@
         <div class="live-indicator"><div class="live-dot"></div> Live Admin Feed Active</div>
     </h2>
     
+    <!-- Platform Metrics Cards -->
     <div class="stats-box">
         <div class="card">
             <h3>Total Registered Users</h3>
@@ -50,219 +66,340 @@
             <h3 style="color: #0ea5e9;">Total Deposits</h3>
             <p id="totalDeposits" style="color: #0ea5e9;">₹0.00</p>
         </div>
-    </div>
-
-    <div class="controls">
-        <div class="btn-group">
-            <button class="btn" onclick="loadAdminData()">Refresh Live Data</button>
-            <button class="btn" style="background:#ef4444;" onclick="adminLogout()">Sign Out</button>
+        <div class="card" style="border-left-color: #f59e0b;">
+            <h3 style="color: #f59e0b;">Total AUM</h3>
+            <p id="totalAum" style="color: #f59e0b;">₹0.00</p>
+        </div>
+        <div class="card" style="border-left-color: #8b5cf6;">
+            <h3 style="color: #8b5cf6;">Pending Payouts</h3>
+            <p id="pendingPayouts" style="color: #8b5cf6;">₹0.00</p>
         </div>
     </div>
 
+    <!-- Broadcast Announcement Tool -->
+    <div class="broadcast-box">
+        <input type="text" id="broadcastMsg" placeholder="Type global announcement or festival bonus alert to push to all user bell notifications..." />
+        <button class="btn" onclick="sendBroadcast()">📢 Push Announcement</button>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="globalSearch" class="search-bar" placeholder="🔍 Search user, email, UTR..." onkeyup="filterTables()" />
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="loadAdminData()">Refresh Data</button>
+            <button class="btn btn-reject" onclick="adminLogout()">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Recharges Table -->
     <div class="section-title">⚡ Pending / Recent Deposit Requests</div>
     <table>
         <thead>
-            <tr>
-                <th>Req ID</th>
-                <th>User</th>
-                <th>Amount</th>
-                <th>UTR / Ref</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
+            <tr><th>Req ID</th><th>User</th><th>Amount</th><th>UTR / Ref</th><th>Time</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody id="rechargeTableBody">
             <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Loading deposit queue...</td></tr>
         </tbody>
     </table>
 
+    <!-- Withdrawals Table -->
     <div class="section-title">🏦 Pending / Recent Withdrawal Requests</div>
     <table>
         <thead>
-            <tr>
-                <th>Req ID</th>
-                <th>User</th>
-                <th>Gross Amt</th>
-                <th>Fee</th>
-                <th>Net Payable</th>
-                <th>Destination UPI</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
+            <tr><th>Req ID</th><th>User</th><th>Gross Amt</th><th>Fee</th><th>Net Payable</th><th>Destination UPI</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody id="withdrawalTableBody">
             <tr><td colspan="8" style="text-align: center; color: #94a3b8;">Loading withdrawal queue...</td></tr>
         </tbody>
     </table>
 
+    <!-- Registered Users & KYC Directory -->
     <div class="section-title">👥 Registered Users & KYC Directory</div>
     <table>
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name & Email</th>
-                <th>Wallet Balance</th>
-                <th>Invested</th>
-                <th>VIP / PIN</th>
-                <th>KYC Details</th>
-                <th>Action</th>
-            </tr>
+            <tr><th>ID</th><th>Name & Email</th><th>Wallet Balance</th><th>Invested</th><th>VIP / PIN</th><th>KYC Details</th><th>Actions</th></tr>
         </thead>
         <tbody id="usersTableBody">
             <tr><td colspan="7" style="text-align: center; color: #94a3b8;">Loading user directory...</td></tr>
         </tbody>
     </table>
+
+    <!-- Support Tickets Center -->
+    <div class="section-title">🎧 Active Support Tickets</div>
+    <table>
+        <thead>
+            <tr><th>Ticket ID</th><th>User</th><th>Subject / Message</th><th>Time</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="ticketsTableBody">
+            <tr><td colspan="6" style="text-align: center; color: #94a3b8;">No support tickets found.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Detailed User History Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 id="modalUserName" style="margin:0; color:#0ea5e9;">User Profile & History</h3>
+            <span onclick="closeUserModal()" style="cursor:pointer; color:#94a3b8; font-size:18px; font-weight:bold;">✕</span>
+        </div>
+        <div id="modalUserDetails" style="font-size:13px; line-height:1.6; color:#94a3b8;"></div>
+    </div>
 </div>
 
 <script>
+    let cachedAdminData = null;
+
     async function loadAdminData() {
         try {
             const res = await fetch('/api/admin/overview');
             const data = await res.json();
+            cachedAdminData = data;
 
-            // Load Users Directory & Stats
-            const userRes = await fetch('/api/admin/users');
-            const userData = await userRes.json();
-            if (userData.success && userData.users) {
-                document.getElementById('totalUsers').innerText = userData.users.length;
-                let totalDep = userData.users.reduce((sum, u) => sum + Number(u.wallet_balance || 0), 0);
-                document.getElementById('totalDeposits').innerText = '₹' + totalDep.toFixed(2);
+            // Update Metrics Cards
+            document.getElementById('totalUsers').innerText = data.totalUsers || 0;
+            document.getElementById('totalDeposits').innerText = '₹' + (data.totalDeposits || 0).toFixed(2);
+            document.getElementById('totalAum').innerText = '₹' + (data.totalAum || 0).toFixed(2);
+            document.getElementById('pendingPayouts').innerText = '₹' + (data.pendingPayouts || 0).toFixed(2);
 
-                const uBody = document.getElementById('usersTableBody');
-                uBody.innerHTML = '';
-                userData.users.forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>#${u.id}</td>
-                        <td><strong>${u.fullname}</strong><br><small style="color:#94a3b8">${u.email}</small></td>
-                        <td style="color:#10b981; font-weight:bold;">₹${u.wallet_balance}</td>
-                        <td>₹${u.total_invested}</td>
-                        <td>VIP ${u.vip_level}<br><small>${u.txn_pin ? 'PIN Set ✓' : 'No PIN ⚠'}</small></td>
-                        <td>
-                            <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : 'badge'}">${u.kyc_status}</span><br>
-                            <small style="color:#94a3b8;">Aadhaar: ${u.aadhaar || 'N/A'}<br>PAN: ${u.pan || 'N/A'}</small>
-                        </td>
-                        <td>
-                            <button class="btn btn-approve" onclick="adjustUserBalance(${u.id}, ${u.wallet_balance})">Edit Balance</button>
-                            <button class="btn btn-reject" onclick="deleteUser(${u.id})">Delete</button>
-                        </td>
-                    `;
-                    uBody.appendChild(tr);
-                });
-            }
-
-            // Render Recharges / Deposits
-            const rBody = document.getElementById('rechargeTableBody');
-            rBody.innerHTML = '';
-            if (data.recharges && data.recharges.length > 0) {
-                data.recharges.forEach(r => {
-                    const badgeClass = r.status === 'Approved' ? 'badge-approved' : r.status === 'Rejected' ? 'badge-rejected' : 'badge';
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>#${r.id}</td>
-                        <td><strong>${r.user_name || 'User #' + r.user_id}</strong><br><small style="color:#94a3b8">${r.user_phone || ''}</small></td>
-                        <td style="color:#10b981; font-weight:bold;">₹${r.amount}</td>
-                        <td><code>${r.utr}</code></td>
-                        <td>${r.time}</td>
-                        <td><span class="${badgeClass}">${r.status}</span></td>
-                        <td>
-                            ${r.status === 'Pending' ? `
-                                <button class="btn btn-approve" onclick="handleRecharge(${r.id}, 'approve')">Approve</button>
-                                <button class="btn btn-reject" onclick="handleRecharge(${r.id}, 'reject')">Reject</button>
-                            ` : '<span>Completed</span>'}
-                        </td>
-                    `;
-                    rBody.appendChild(tr);
-                });
-            } else {
-                rBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8;">No recharge requests.</td></tr>`;
-            }
-
-            // Render Withdrawals
-            const wBody = document.getElementById('withdrawalTableBody');
-            wBody.innerHTML = '';
-            if (data.withdrawals && data.withdrawals.length > 0) {
-                data.withdrawals.forEach(w => {
-                    const badgeClass = w.status === 'Settled' ? 'badge-approved' : w.status === 'Rejected' ? 'badge-rejected' : 'badge';
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>#${w.id}</td>
-                        <td><strong>${w.user_name || 'User #' + w.user_id}</strong><br><small style="color:#94a3b8">${w.user_phone || ''}</small></td>
-                        <td>₹${w.gross_amount}</td>
-                        <td style="color:#f87171">₹${w.fee}</td>
-                        <td style="color:#10b981; font-weight:bold;">₹${w.net_amount}</td>
-                        <td><code>${w.upi_id}</code></td>
-                        <td><span class="${badgeClass}">${w.status}</span></td>
-                        <td>
-                            ${w.status === 'Pending' ? `
-                                <button class="btn btn-approve" onclick="handleWithdrawal(${w.id}, 'approve')">Approve</button>
-                                <button class="btn btn-reject" onclick="handleWithdrawal(${w.id}, 'reject')">Reject</button>
-                            ` : '<span>Completed</span>'}
-                        </td>
-                    `;
-                    wBody.appendChild(tr);
-                });
-            } else {
-                wBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8;">No withdrawal requests.</td></tr>`;
-            }
-
+            renderRecharges(data.recharges);
+            renderWithdrawals(data.withdrawals);
+            renderUsers(data.users);
+            renderTickets(data.tickets);
         } catch (err) {
             console.error("Failed to load admin overview:", err);
         }
     }
 
+    function renderRecharges(recharges) {
+        const rBody = document.getElementById('rechargeTableBody');
+        rBody.innerHTML = '';
+        if (recharges && recharges.length > 0) {
+            recharges.forEach(r => {
+                const badgeClass = r.status === 'Approved' ? 'badge-approved' : r.status === 'Rejected' ? 'badge-rejected' : 'badge';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${r.id}</td>
+                    <td><strong>${r.user_name || 'User #' + r.user_id}</strong><br><small style="color:#94a3b8">${r.user_phone || ''}</small></td>
+                    <td style="color:#10b981; font-weight:bold;">₹${r.amount}</td>
+                    <td><code>${r.utr}</code></td>
+                    <td>${r.time}</td>
+                    <td><span class="${badgeClass}">${r.status}</span></td>
+                    <td>
+                        ${r.status === 'Pending' ? `
+                            <button class="btn btn-approve" onclick="handleRecharge(${r.id}, 'approve')">Approve</button>
+                            <button class="btn btn-reject" onclick="handleRecharge(${r.id}, 'reject')">Reject</button>
+                        ` : '<span>Completed</span>'}
+                    </td>
+                `;
+                rBody.appendChild(tr);
+            });
+        } else {
+            rBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8;">No recharge requests.</td></tr>`;
+        }
+    }
+
+    function renderWithdrawals(withdrawals) {
+        const wBody = document.getElementById('withdrawalTableBody');
+        wBody.innerHTML = '';
+        if (withdrawals && withdrawals.length > 0) {
+            withdrawals.forEach(w => {
+                const badgeClass = w.status === 'Settled' ? 'badge-approved' : w.status === 'Rejected' ? 'badge-rejected' : 'badge';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${w.id}</td>
+                    <td><strong>${w.user_name || 'User #' + w.user_id}</strong><br><small style="color:#94a3b8">${w.user_phone || ''}</small></td>
+                    <td>₹${w.gross_amount}</td>
+                    <td style="color:#f87171">₹${w.fee}</td>
+                    <td style="color:#10b981; font-weight:bold;">₹${w.net_amount}</td>
+                    <td><code>${w.upi_id}</code></td>
+                    <td><span class="${badgeClass}">${w.status}</span></td>
+                    <td>
+                        ${w.status === 'Pending' ? `
+                            <button class="btn btn-approve" onclick="handleWithdrawal(${w.id}, 'approve')">Settle</button>
+                            <button class="btn btn-reject" onclick="handleWithdrawal(${w.id}, 'reject')">Reject</button>
+                        ` : '<span>Completed</span>'}
+                    </td>
+                `;
+                wBody.appendChild(tr);
+            });
+        } else {
+            wBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8;">No withdrawal requests.</td></tr>`;
+        }
+    }
+
+    function renderUsers(users) {
+        const uBody = document.getElementById('usersTableBody');
+        uBody.innerHTML = '';
+        if (users && users.length > 0) {
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${u.id}</td>
+                    <td><strong>${u.fullname}</strong><br><small style="color:#94a3b8">${u.email}</small></td>
+                    <td style="color:#10b981; font-weight:bold;">₹${u.wallet_balance}</td>
+                    <td>₹${u.total_invested}</td>
+                    <td>VIP ${u.vip_level}<br><small>${u.txn_pin ? 'PIN Set ✓' : 'No PIN ⚠'}</small></td>
+                    <td>
+                        <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : u.kyc_status === 'Rejected' ? 'badge-rejected' : 'badge'}">${u.kyc_status}</span><br>
+                        <small style="color:#94a3b8;">Aadhaar: ${u.aadhaar || 'N/A'}<br>PAN: ${u.pan || 'N/A'}</small>
+                        <div style="margin-top:4px;">
+                            ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Verified')">Verify KYC</button>` : ''}
+                            ${u.kyc_status !== 'Rejected' ? `<button class="btn btn-reject" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Rejected')">Reject</button>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-approve" style="padding:4px 8px; font-size:11px;" onclick="adjustUserBalance(${u.id}, ${u.wallet_balance})">Balance</button>
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewUserHistory(${u.id})">History</button>
+                        <button class="btn btn-reject" style="padding:4px 8px; font-size:11px;" onclick="deleteUser(${u.id})">Delete</button>
+                    </td>
+                `;
+                uBody.appendChild(tr);
+            });
+        } else {
+            uBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8;">No registered users.</td></tr>`;
+        }
+    }
+
+    function renderTickets(tickets) {
+        const tBody = document.getElementById('ticketsTableBody');
+        tBody.innerHTML = '';
+        if (tickets && tickets.length > 0) {
+            tickets.forEach(t => {
+                const badgeClass = t.status === 'Resolved' ? 'badge-approved' : 'badge';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${t.id}</td>
+                    <td><strong>${t.user_name || 'User #' + t.user_id}</strong><br><small style="color:#94a3b8">${t.user_phone || ''}</small></td>
+                    <td><b>${t.subject}</b><br><small>${t.message}</small></td>
+                    <td>${t.time}</td>
+                    <td><span class="${badgeClass}">${t.status}</span></td>
+                    <td>
+                        ${t.status === 'Open' ? `<button class="btn btn-approve" onclick="resolveTicket(${t.id})">Mark Resolved</button>` : '<span>Closed</span>'}
+                    </td>
+                `;
+                tBody.appendChild(tr);
+            });
+        } else {
+            tBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #94a3b8;">No support tickets.</td></tr>`;
+        }
+    }
+
+    async function handleKyc(userId, status) {
+        if (!confirm(`Are you sure you want to set KYC status to ${status}?`)) return;
+        await fetch('/api/admin/kyc-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, status })
+        });
+        loadAdminData();
+    }
+
+    async function resolveTicket(ticketId) {
+        await fetch('/api/admin/ticket-resolve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticketId })
+        });
+        loadAdminData();
+    }
+
+    async function sendBroadcast() {
+        const message = document.getElementById('broadcastMsg').value.trim();
+        if (!message) return alert("Please enter announcement message.");
+        const res = await fetch('/api/admin/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById('broadcastMsg').value = '';
+    }
+
+    async function viewUserHistory(userId) {
+        const res = await fetch(`/api/admin/user-history?userId=${userId}`);
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('modalUserName').innerText = `${data.user.name}'s Detailed Profile`;
+            document.getElementById('modalUserDetails').innerHTML = `
+                <p><b>Email / Phone:</b> ${data.user.phone}</p>
+                <p><b>Wallet Balance:</b> ₹${data.user.wallet_balance} | <b>Total Invested:</b> ₹${data.user.total_invested}</p>
+                <p><b>VIP Tier:</b> VIP ${data.user.vip_level} | <b>Referral Code:</b> ${data.user.referral_code}</p>
+                <p><b>Active Subscriptions:</b> ${data.plans.length} Plants</p>
+                <ul style="padding-left:15px; margin:5px 0;">
+                    ${data.plans.map(p => `<li>${p.plan_name} (₹${p.cost}) - Yield: ₹${p.daily_return}/day</li>`).join('')}
+                </ul>
+                <p><b>Team Recruits (Tier 1):</b> ${data.teamCount} members</p>
+            `;
+            document.getElementById('userModal').style.display = 'flex';
+        }
+    }
+
+    function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
+
+    function filterTables() {
+        const query = document.getElementById('globalSearch').value.toLowerCase();
+        if (!cachedAdminData) return;
+        
+        // Filter Recharges
+        const filteredRecharges = cachedAdminData.recharges.filter(r => 
+            (r.user_name && r.user_name.toLowerCase().includes(query)) ||
+            (r.utr && r.utr.toLowerCase().includes(query)) ||
+            (r.amount && r.amount.toString().includes(query))
+        );
+        renderRecharges(filteredRecharges);
+
+        // Filter Users
+        const filteredUsers = cachedAdminData.users.filter(u =>
+            (u.fullname && u.fullname.toLowerCase().includes(query)) ||
+            (u.email && u.email.toLowerCase().includes(query))
+        );
+        renderUsers(filteredUsers);
+    }
+
     async function handleRecharge(requestId, action) {
         if (!confirm(`Are you sure you want to ${action} this deposit request?`)) return;
-        try {
-            const res = await fetch('/api/admin/recharge-action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ requestId, action })
-            });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminData();
-        } catch (err) { alert("Action failed."); }
+        const res = await fetch('/api/admin/recharge-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, action })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadAdminData();
     }
 
     async function handleWithdrawal(requestId, action) {
         if (!confirm(`Are you sure you want to ${action} this withdrawal request?`)) return;
-        try {
-            const res = await fetch('/api/admin/withdraw-action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ requestId, action })
-            });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminData();
-        } catch (err) { alert("Action failed."); }
+        const res = await fetch('/api/admin/withdraw-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, action })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadAdminData();
     }
 
     async function adjustUserBalance(userId, currentBalance) {
         const newBal = prompt("Enter new wallet balance (₹):", currentBalance);
         if (newBal === null) return;
-        try {
-            const res = await fetch(`/api/admin/users/${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ wallet_balance: Number(newBal) })
-            });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminData();
-        } catch(e) { alert("Failed to update balance."); }
+        const res = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallet_balance: Number(newBal) })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadAdminData();
     }
 
     async function deleteUser(userId) {
         if (!confirm("Are you sure you want to delete this user?")) return;
-        try {
-            const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
-            const data = await res.json();
-            alert(data.message);
-            loadAdminData();
-        } catch(e) { alert("Failed to delete user."); }
+        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        const data = await res.json();
+        alert(data.message);
+        loadAdminData();
     }
 
     function adminLogout() { window.location.href = '/'; }
@@ -283,7 +420,7 @@
 
     loadAdminData();
     initAdminLiveStream();
-    setInterval(loadAdminData, 10000); // Polling fallback
+    setInterval(loadAdminData, 15000);
 </script>
 
 </body>

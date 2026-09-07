@@ -521,10 +521,28 @@ app.post('/api/admin/login', (req, res) => {
   else res.status(401).json({ error: "Invalid credentials." });
 });
 
+// 🚀 Upgraded Admin Overview Endpoint with Metrics & Support Tickets
 app.get('/api/admin/overview', async (req, res) => {
   const recharges = await db.all('SELECT r.*, u.name as user_name, u.phone as user_phone FROM recharge_requests r LEFT JOIN user u ON r.user_id = u.id ORDER BY r.id DESC LIMIT 50');
   const withdrawals = await db.all('SELECT w.*, u.name as user_name, u.phone as user_phone FROM withdrawal_requests w LEFT JOIN user u ON w.user_id = u.id ORDER BY w.id DESC LIMIT 50');
-  res.json({ recharges, withdrawals });
+  const users = await db.all('SELECT id, name AS fullname, phone AS email, wallet_balance, total_invested, vip_level, kyc_status, aadhaar, pan, txn_pin, referral_code FROM user ORDER BY id DESC');
+  const tickets = await db.all('SELECT t.*, u.name as user_name, u.phone as user_phone FROM support_tickets t LEFT JOIN user u ON t.user_id = u.id ORDER BY t.id DESC');
+  
+  const totalUsers = users.length;
+  const totalDeposits = users.reduce((sum, u) => sum + Number(u.wallet_balance || 0), 0);
+  const totalAumRes = await db.get('SELECT SUM(total_invested) as total FROM user');
+  const pendingPayoutsRes = await db.get('SELECT SUM(net_amount) as total FROM withdrawal_requests WHERE status = "Pending"');
+
+  res.json({
+    recharges,
+    withdrawals,
+    users,
+    tickets,
+    totalUsers,
+    totalDeposits,
+    totalAum: totalAumRes.total || 0,
+    pendingPayouts: pendingPayoutsRes.total || 0
+  });
 });
 
 // 🛡️ Enhanced Admin Users Endpoint with KYC & Full Details
@@ -550,6 +568,40 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// 🚀 New Admin Actions (KYC, Tickets, Broadcast, History)
+app.post('/api/admin/kyc-action', async (req, res) => {
+  const { userId, status } = req.body;
+  await db.run('UPDATE user SET kyc_status = ? WHERE id = ?', [status, userId]);
+  notifyUserLive(userId);
+  res.json({ message: `KYC status updated to ${status}.` });
+});
+
+app.post('/api/admin/ticket-resolve', async (req, res) => {
+  const { ticketId } = req.body;
+  await db.run('UPDATE support_tickets SET status = "Resolved" WHERE id = ?', [ticketId]);
+  res.json({ message: "Support ticket marked as resolved." });
+});
+
+app.post('/api/admin/broadcast', async (req, res) => {
+  const { message } = req.body;
+  const users = await db.all('SELECT id FROM user');
+  const timeNow = new Date().toLocaleTimeString();
+  for (const u of users) {
+    await db.run('INSERT INTO notifications (user_id, title, message, time) VALUES (?, ?, ?, ?)', [u.id, "Platform Announcement 📢", message, timeNow]);
+    notifyUserLive(u.id);
+  }
+  res.json({ message: "Announcement broadcasted successfully to all users!" });
+});
+
+app.get('/api/admin/user-history', async (req, res) => {
+  const userId = req.query.userId;
+  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
+  if (!user) return res.status(404).json({ success: false, error: "User not found" });
+  const plans = await db.all('SELECT * FROM user_plans WHERE user_id = ?', [userId]);
+  const teamCount = await db.get('SELECT COUNT(*) as count FROM user WHERE referred_by = ?', [user.referral_code]);
+  res.json({ success: true, user, plans, teamCount: teamCount.count });
 });
 
 app.put('/api/admin/users/:id', async (req, res) => {
