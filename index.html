@@ -856,11 +856,29 @@
     }
     function closeCertModal() { document.getElementById('certModal').style.display = 'none'; }
 
+    function startSettlementCountdown() {
+      const updateClock = () => {
+        const now = new Date();
+        const target = new Date();
+        target.setHours(24, 0, 0, 0);
+        let diff = target - now;
+        if (diff < 0) diff = 0;
+        const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+        const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+        const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+        const clockElem = document.getElementById('countdownClock');
+        if (clockElem) clockElem.textContent = `${hours}:${minutes}:${seconds}`;
+      };
+      updateClock();
+      setInterval(updateClock, 1000);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get('ref');
       if (ref) { switchAuth('reg'); document.getElementById('regRef').value = ref; }
       drawSpinWheel();
+      startSettlementCountdown();
       startApp();
       setTimeout(triggerRandomActivityToast, 3000);
     });
