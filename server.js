@@ -170,7 +170,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-// Console OTP Logging Route (Bypasses Render SMTP Blocking)
+// Brevo HTTP API Email OTP Route (100% Free & Render Compatible)
 app.post('/api/send-email-otp', async (req, res) => {
   const { email } = req.body;
   if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
@@ -178,11 +178,30 @@ app.post('/api/send-email-otp', async (req, res) => {
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
   emailOtpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
-  console.log(`=================================`);
-  console.log(`[OTP SERVICE] Code for ${email}: ${otp}`);
-  console.log(`=================================`);
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': 'xkeysib-a6caef3a4237943bec3b6668c70bb9850e7ada699', // Aapki Brevo API Key
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: "CleanPower Global", email: "ychauhan853498@gmail.com" }, // Aapki Email ID
+        to: [{ email: email }],
+        subject: "Verification Code - CleanPower Global",
+        textContent: `Your institutional verification code is: ${otp}`
+      })
+    });
 
-  res.json({ message: "OTP generated successfully!" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Failed to send email via Brevo");
+
+    res.json({ message: "OTP sent successfully to your email!" });
+  } catch (err) {
+    console.error("Brevo API error:", err);
+    res.status(500).json({ error: "Failed to send email OTP: " + err.message });
+  }
 });
 
 app.post('/api/register-with-email-otp', async (req, res) => {
