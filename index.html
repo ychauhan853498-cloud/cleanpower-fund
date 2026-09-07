@@ -29,8 +29,6 @@
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
-    .support-btn { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .support-btn:hover { background: rgba(16, 185, 129, 0.2); }
     .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
     .logout-btn { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
@@ -248,6 +246,53 @@
       justify-content: center;
       flex-shrink: 0;
     }
+
+    /* Lucky Spin Card Component inside Tasks Tab */
+    .spin-section-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      margin-top: 16px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .wheel-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 14px auto;
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 16px solid var(--accent-yellow);
+      z-index: 10;
+    }
+    .wheel-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px;
+      height: 50px;
+      background: var(--bg-primary);
+      border: 2px solid var(--accent-yellow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--accent-yellow);
+      z-index: 5;
+    }
   </style>
 </head>
 <body>
@@ -310,7 +355,6 @@
     <header class="top-bar">
       <div class="brand">☀️ CleanPower Fund</div>
       <div class="top-actions">
-        <button class="support-btn" onclick="openSupportModal()">🎧 Support</button>
         <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
         <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
       </div>
@@ -506,21 +550,22 @@
           </div>
           <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask2" onclick="completeDailyTask(2, 15)">Claim ₹15</button>
         </div>
-      </div>
 
-      <div id="tabSpin" style="display: none; text-align: center;">
-        <div class="section-header">Daily Lucky Spin & Win</div>
-        <p style="font-size:11px; color:var(--text-muted); margin: 4px 0 16px 0;">1 Free Spin every 24 hours. Cash prizes credit directly to your wallet.</p>
+        <!-- Integrated Lucky Spin Wheel Component inside Tasks Tab -->
+        <div class="spin-section-card">
+          <div class="section-header" style="margin: 0 0 4px 0;">🎡 Daily Lucky Spin & Win</div>
+          <p style="font-size:11px; color:var(--text-muted); margin: 0 0 10px 0;">1 Free Spin every 24 hours. Instant wallet credit.</p>
 
-        <div class="wheel-container">
-          <div class="wheel-pointer"></div>
-          <canvas id="wheelCanvas" width="260" height="260"></canvas>
-          <div class="wheel-center">SPIN</div>
+          <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="260" height="260"></canvas>
+            <div class="wheel-center">SPIN</div>
+          </div>
+
+          <button class="btn-main" id="spinActionBtn" style="background:var(--accent-yellow); color:#000; font-weight:900; margin-top:8px;" onclick="executeWheelSpin()">
+            Spin Now (Free)
+          </button>
         </div>
-
-        <button class="btn-main" id="spinActionBtn" style="background:var(--accent-yellow); color:#000; font-weight:900; margin-top:12px;" onclick="executeWheelSpin()">
-          Spin Now (Free)
-        </button>
       </div>
 
       <div id="tabAssets" style="display: none;">
@@ -769,7 +814,6 @@
     <nav class="bottom-bar">
       <button class="nav-btn active" id="nbHome" onclick="switchNav('home')"><span>⚡</span><span>Invest</span></button>
       <button class="nav-btn" id="nbTasks" onclick="switchNav('tasks')"><span>🎯</span><span>Tasks</span></button>
-      <button class="nav-btn" id="nbSpin" onclick="switchNav('spin')"><span>🎡</span><span>Spin</span></button>
       <button class="nav-btn" id="nbAssets" onclick="switchNav('assets')"><span>📊</span><span>Assets</span></button>
       <button class="nav-btn" id="nbTeam" onclick="switchNav('team')"><span>👥</span><span>Team</span></button>
       <button class="nav-btn" id="nbNotifications" onclick="switchNav('notifications')"><span>🔔</span><span>Alerts</span><span class="notification-badge" id="notifBadge">0</span></button>
@@ -789,9 +833,7 @@
     let sseConnection = null;
     let loggedInUserData = null;
 
-    const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
     const validatePasswordFormat = (pass) => {
-      // Minimum 6 chars, 1 capital letter, 1 number, 1 special character
       const minLength = pass.length >= 6;
       const hasCapital = /[A-Z]/.test(pass);
       const hasNumber = /[0-9]/.test(pass);
@@ -910,22 +952,25 @@
     }
 
     function switchNav(n) {
-      ['tabHome', 'tabTasks', 'tabSpin', 'tabAssets', 'tabTeam', 'tabNotifications', 'tabSupport'].forEach(tab => {
-        document.getElementById(tab).style.display = 'none';
+      ['tabHome', 'tabTasks', 'tabAssets', 'tabTeam', 'tabNotifications', 'tabSupport'].forEach(tab => {
+        const el = document.getElementById(tab);
+        if (el) el.style.display = 'none';
       });
-      ['nbHome', 'nbTasks', 'nbSpin', 'nbAssets', 'nbTeam', 'nbNotifications', 'nbSupport'].forEach(btn => {
-        document.getElementById(btn).classList.remove('active');
+      ['nbHome', 'nbTasks', 'nbAssets', 'nbTeam', 'nbNotifications', 'nbSupport'].forEach(btn => {
+        const el = document.getElementById(btn);
+        if (el) el.classList.remove('active');
       });
 
-      const activeTabMap = { home: 'tabHome', tasks: 'tabTasks', spin: 'tabSpin', assets: 'tabAssets', team: 'tabTeam', notifications: 'tabNotifications', support: 'tabSupport' };
-      const activeBtnMap = { home: 'nbHome', tasks: 'nbTasks', spin: 'nbSpin', assets: 'nbAssets', team: 'nbTeam', notifications: 'nbNotifications', support: 'nbSupport' };
+      const activeTabMap = { home: 'tabHome', tasks: 'tabTasks', assets: 'tabAssets', team: 'tabTeam', notifications: 'tabNotifications', support: 'tabSupport' };
+      const activeBtnMap = { home: 'nbHome', tasks: 'nbTasks', assets: 'nbAssets', team: 'nbTeam', notifications: 'nbNotifications', support: 'nbSupport' };
 
       const targetTab = document.getElementById(activeTabMap[n]);
       if (targetTab) {
         targetTab.style.display = 'block';
         targetTab.style.animation = 'fadeIn 0.3s ease-out';
       }
-      document.getElementById(activeBtnMap[n]).classList.add('active');
+      const targetBtn = document.getElementById(activeBtnMap[n]);
+      if (targetBtn) targetBtn.classList.add('active');
 
       if (n === 'notifications') {
         markNotificationsRead();
@@ -1185,8 +1230,10 @@
         pinText.style.color = isPinConfigured ? "#4ade80" : "#f87171";
 
         const spinBtn = document.getElementById('spinActionBtn');
-        spinBtn.disabled = !data.canSpin;
-        spinBtn.textContent = data.canSpin ? "Spin Now (Free)" : "Daily Spin Claimed ✓";
+        if (spinBtn) {
+          spinBtn.disabled = !data.canSpin;
+          spinBtn.textContent = data.canSpin ? "Spin Now (Free)" : "Daily Spin Claimed ✓";
+        }
 
         if (data.teamStats) {
           document.getElementById('teamL1Count').textContent = data.teamStats.l1Count;
