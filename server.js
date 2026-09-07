@@ -4,6 +4,7 @@ const cron = require('node-cron');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -11,8 +12,17 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 let db;
-const otpStore = {};
+const emailOtpStore = {};
 const hasSpecialChar = (str) => /[!@#$%^&*(),.?":{}|<>]/.test(str);
+
+// Nodemailer configuration for 100% Free Email OTP
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'your-email@gmail.com',     // Yahan apni Gmail ID dalein
+    pass: 'your-gmail-app-password'   // Yahan Gmail ka App Password dalein
+  }
+});
 
 (async () => {
   db = await open({
@@ -170,31 +180,44 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-app.post('/api/send-otp', async (req, res) => {
-  const { phone } = req.body;
-  if (!phone || phone.trim().length < 10) return res.status(400).json({ error: "Invalid mobile number." });
+// Email OTP Endpoints
+app.post('/api/send-email-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
   const otp = Math.floor(1000 + Math.random() * 9000).toString();
-  otpStore[phone] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
-  res.json({ message: "OTP sent.", testOtp: otp });
+  emailOtpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+
+  try {
+    await transporter.sendMail({
+      from: '"CleanPower Global" <your-email@gmail.com>',
+      to: email,
+      subject: 'Verification Code - CleanPower Global',
+      text: `Your institutional verification code is: ${otp}`
+    });
+    res.json({ message: "OTP sent successfully to email." });
+  } catch (err) {
+    console.error("Email send error:", err);
+    res.status(500).json({ error: "Failed to send email OTP." });
+  }
 });
 
-app.post('/api/register-with-otp', async (req, res) => {
-  const { name, phone, password, otp, refCode } = req.body;
-  if (!name || !phone || !password || !otp) return res.status(400).json({ error: "All fields required." });
+app.post('/api/register-with-email-otp', async (req, res) => {
+  const { name, email, password, otp, refCode } = req.body;
+  if (!name || !email || !password || !otp) return res.status(400).json({ error: "All fields required." });
   if (!hasSpecialChar(password)) return res.status(400).json({ error: "Password needs a special character." });
 
-  const stored = otpStore[phone];
+  const stored = emailOtpStore[email];
   if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid or expired OTP." });
 
-  const existing = await db.get('SELECT * FROM user WHERE phone = ?', [phone]);
-  if (existing) return res.status(400).json({ error: "Number already registered." });
+  const existing = await db.get('SELECT * FROM user WHERE phone = ?', [email]);
+  if (existing) return res.status(400).json({ error: "Email already registered." });
 
-  delete otpStore[phone];
+  delete emailOtpStore[email];
   const cleanRef = (refCode || '').trim();
   const newRefCode = 'SLR' + Math.floor(1000 + Math.random() * 9000);
   const timeNow = new Date().toLocaleTimeString();
 
-  const result = await db.run('INSERT INTO user (name, phone, password, wallet_balance, referral_code, referred_by, vip_level) VALUES (?, ?, ?, ?, ?, ?, 1)', [name, phone, password, 50, newRefCode, cleanRef]);
+  const result = await db.run('INSERT INTO user (name, phone, password, wallet_balance, referral_code, referred_by, vip_level) VALUES (?, ?, ?, ?, ?, ?, 1)', [name, email, password, 50, newRefCode, cleanRef]);
   const newUserId = result.lastID;
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [newUserId, 'WELCOME BONUS', 50, timeNow, 'Settled']);
 
@@ -208,12 +231,12 @@ app.post('/api/register-with-otp', async (req, res) => {
   res.json({ message: "Registration successful. ₹50 credited.", userId: newUserId });
 });
 
-app.post('/api/reset-password', async (req, res) => {
-  const { phone, otp, newPassword } = req.body;
-  const stored = otpStore[phone];
+app.post('/api/reset-password-email', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  const stored = emailOtpStore[email];
   if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid OTP." });
-  await db.run('UPDATE user SET password = ? WHERE phone = ?', [newPassword, phone]);
-  delete otpStore[phone];
+  await db.run('UPDATE user SET password = ? WHERE phone = ?', [newPassword, email]);
+  delete emailOtpStore[email];
   res.json({ message: "Password updated." });
 });
 
@@ -224,9 +247,9 @@ app.post('/api/set-txn-pin', async (req, res) => {
   res.json({ message: "PIN saved." });
 });
 
-app.post('/api/login', async (req, res) => {
-  const { phone, password } = req.body;
-  const user = await db.get('SELECT * FROM user WHERE phone = ? AND password = ?', [phone, password]);
+app.post('/api/login-email', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await db.get('SELECT * FROM user WHERE phone = ? AND password = ?', [email, password]);
   if (!user) return res.status(400).json({ error: "Invalid credentials." });
   res.json({ message: "Login successful.", userId: user.id });
 });
@@ -305,25 +328,6 @@ app.post('/api/claim-daily', async (req, res) => {
   await db.run('UPDATE user SET wallet_balance = wallet_balance + 5, today_income = today_income + 5, last_checkin = ? WHERE id = ?', [today, userId]);
   await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, 'DAILY BONUS', 5, timeNow, 'Settled']);
   res.json({ message: "₹5 credited." });
-});
-
-app.post('/api/claim-milestone', async (req, res) => {
-  const { userId, milestoneId } = req.body;
-  const user = await db.get('SELECT * FROM user WHERE id = ?', [userId]);
-  const claimed = (user.claimed_milestones || '').split(',').filter(Boolean);
-  if (claimed.includes(milestoneId.toString())) return res.status(400).json({ error: "Already claimed." });
-
-  const l1Members = await db.all('SELECT id FROM user WHERE referred_by = ?', [user.referral_code]);
-  const cfg = { "1": { req: 3, rew: 150, name: "3 Direct" }, "2": { req: 10, rew: 600, name: "10 Direct" }, "3": { req: 30, rew: 2000, name: "30 Direct" } };
-  const target = cfg[milestoneId.toString()];
-
-  if (l1Members.length < target.req) return res.status(400).json({ error: "Requirement not met." });
-
-  claimed.push(milestoneId.toString());
-  const timeNow = new Date().toLocaleTimeString();
-  await db.run('UPDATE user SET wallet_balance = wallet_balance + ?, claimed_milestones = ? WHERE id = ?', [target.rew, claimed.join(','), userId]);
-  await db.run('INSERT INTO transactions (user_id, type, amount, time, status) VALUES (?, ?, ?, ?, ?)', [userId, `SALARY BONUS (${target.name})`, target.rew, timeNow, 'Settled']);
-  res.json({ message: `₹${target.rew} milestone bonus credited.` });
 });
 
 app.post('/api/spin-wheel', async (req, res) => {
@@ -409,7 +413,6 @@ app.get('/api/admin/overview', async (req, res) => {
   res.json({ recharges, withdrawals });
 });
 
-// Explicit Mapping for Admin Dashboard compatibility
 app.get('/api/admin/users', async (req, res) => {
   try {
     const users = await db.all(`

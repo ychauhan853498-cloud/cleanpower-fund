@@ -129,14 +129,7 @@
 
     .custom-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
     .custom-modal-content { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; padding: 24px; max-height: 85vh; overflow-y: auto; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
-  
-    /* Firebase styling elements */
-    #recaptcha-container { margin-bottom: 12px; display: flex; justify-content: center; }
   </style>
-  
-  <!-- Firebase SDK Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -187,7 +180,7 @@
       </div>
 
       <div id="fLog">
-        <input type="tel" id="logPhone" placeholder="Registered Mobile Number" />
+        <input type="email" id="logEmail" placeholder="Registered Email Address" />
         <input type="password" id="logPass" placeholder="Security Password" />
         <span class="forgot-link" onclick="openForgotScreen()">Forgot Credentials?</span>
         <button class="btn-main" onclick="handleLogin()">Sign In to Portfolio</button>
@@ -195,14 +188,11 @@
 
       <div id="fReg" style="display: none;">
         <input type="text" id="regName" placeholder="Full Legal Name" />
-        <input type="tel" id="regPhone" placeholder="Mobile Number (10 Digits)" />
+        <input type="email" id="regEmail" placeholder="Email Address" />
         
-        <!-- Firebase reCAPTCHA container -->
-        <div id="recaptcha-container"></div>
-
         <div class="otp-row">
-          <input type="number" id="regOtp" placeholder="SMS Code" />
-          <button type="button" class="btn-otp" id="otpBtn" onclick="requestFirebaseOtp()">Send Code</button>
+          <input type="number" id="regOtp" placeholder="Email Code" />
+          <button type="button" class="btn-otp" id="otpBtn" onclick="requestEmailOtp()">Send Code</button>
         </div>
         <input type="password" id="regPass" placeholder="Create Password (e.g. Capital@2026)" />
         <small style="display:block; color:var(--text-muted); font-size:11px; margin:-6px 0 12px 2px;">*Must include 1 special character</small>
@@ -212,14 +202,11 @@
 
       <div id="fForgot" style="display: none;">
         <h3 style="margin-top:0; color:var(--accent); font-size:15px;">Security Credential Reset</h3>
-        <input type="tel" id="forgotPhone" placeholder="Registered Mobile Number" />
+        <input type="email" id="forgotEmail" placeholder="Registered Email Address" />
         
-        <!-- Firebase reCAPTCHA container for forgot password if needed, or share/separate container -->
-        <div id="recaptcha-container-forgot"></div>
-
         <div class="otp-row">
-          <input type="number" id="forgotOtp" placeholder="SMS Code" />
-          <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestFirebaseOtpReset()">Send Code</button>
+          <input type="number" id="forgotOtp" placeholder="Email Code" />
+          <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestEmailOtpReset()">Send Code</button>
         </div>
         <input type="password" id="forgotNewPass" placeholder="New Password" />
         <button class="btn-main" onclick="handleResetPassword()">Update Credentials</button>
@@ -350,7 +337,7 @@
           <button class="btn-invest" onclick="investPlan('Mega Array 20kW', 'VIP3', 10000, 900, 45)">Subscribe ₹10,000</button>
         </div>
 
-        <!-- Plan 4: VIP 4 Advanced Wind Turbine Farm (NEW) -->
+        <!-- Plan 4: VIP 4 Advanced Wind Turbine Farm -->
         <div class="plan-card">
           <span class="plan-badge badge-v4">VIP 4 Advanced</span>
           <div class="plan-title">High-Efficiency Wind Turbine Farm 50kW</div>
@@ -362,7 +349,7 @@
           <button class="btn-invest" onclick="investPlan('Wind Turbine Farm 50kW', 'VIP4', 25000, 2450, 45)">Subscribe ₹25,000</button>
         </div>
 
-        <!-- Plan 5: VIP 4 Utility Solar Park (NEW) -->
+        <!-- Plan 5: VIP 4 Utility Solar Park -->
         <div class="plan-card">
           <span class="plan-badge badge-v4">VIP 4 Utility</span>
           <div class="plan-title">Utility-Scale Solar Park Grid 100kW</div>
@@ -374,7 +361,7 @@
           <button class="btn-invest" onclick="investPlan('Utility Solar Park 100kW', 'VIP4', 35000, 3600, 45)">Subscribe ₹35,000</button>
         </div>
 
-        <!-- Plan 6: VIP 4 Offshore Hybrid Green Plant (NEW) -->
+        <!-- Plan 6: VIP 4 Offshore Hybrid Green Plant -->
         <div class="plan-card">
           <span class="plan-badge badge-v4">VIP 4 Flagship</span>
           <div class="plan-title">Offshore Hybrid Green Energy Plant 250kW</div>
@@ -527,7 +514,7 @@
             <span style="font-size:11px; color:#25D366; font-weight:800;">+91 8534980497</span>
           </div>
           <a href="https://wa.me/918534980497?text=Hello%20Support" target="_blank" class="support-link-btn" style="background:#25D366;">Open Chat</a>
-      </div>
+        </div>
       </div>
 
       <!-- FINANCIAL ACTION MODAL -->
@@ -604,85 +591,6 @@
   </div>
 
   <script>
-    // Firebase Configuration Initialization
-    const firebaseConfig = {
-      apiKey: "AIzaSyAOVNZIF5qlJXWB0qwE1QjzIR1cZItm7YU",
-      authDomain: "cleanpower-fund.firebaseapp.com",
-      projectId: "cleanpower-fund",
-      storageBucket: "cleanpower-fund.firebasestorage.app",
-      messagingSenderId: "1065453645635",
-      appId: "1:1065453645635:web:a6e37ab4f73584936bc9f6",
-      measurementId: "G-9ZZLHCW93G"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    let confirmationResultGlobal = null;
-
-    async function requestFirebaseOtp() {
-      const phoneInput = document.getElementById('regPhone').value.trim();
-      const btn = document.getElementById('otpBtn');
-      if (!phoneInput || phoneInput.length < 10) {
-        return alert("Please enter a valid 10-digit mobile number.");
-      }
-
-      const phoneNumber = "+91" + phoneInput;
-      btn.disabled = true;
-      btn.textContent = "Sending...";
-
-      try {
-        // Har request par container ko fresh karke naya verifier banayein taaki duplicate error na aaye
-        const container = document.getElementById('recaptcha-container');
-        container.innerHTML = '';
-
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          'size': 'invisible'
-        });
-
-        const appVerifier = window.recaptchaVerifier;
-        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier);
-        confirmationResultGlobal = result;
-        alert("Real SMS OTP sent successfully to " + phoneNumber);
-        btn.textContent = "Sent ✓";
-      } catch (error) {
-        console.error("Firebase SMS error:", error);
-        alert("Failed to send SMS OTP: " + error.message);
-        btn.disabled = false;
-        btn.textContent = "Send Code";
-        window.recaptchaVerifier = null;
-      }
-    }
-
-    async function requestFirebaseOtpReset() {
-      const phoneInput = document.getElementById('forgotPhone').value.trim();
-      const btn = document.getElementById('forgotOtpBtn');
-      if (!phoneInput || phoneInput.length < 10) {
-        return alert("Please enter a valid 10-digit mobile number.");
-      }
-
-      const phoneNumber = "+91" + phoneInput;
-      btn.disabled = true;
-      btn.textContent = "Sending...";
-
-      try {
-        const container = document.getElementById('recaptcha-container-forgot');
-        if (container) container.innerHTML = '';
-
-        window.recaptchaVerifierForgot = new firebase.auth.RecaptchaVerifier('recaptcha-container-forgot', {
-          'size': 'invisible'
-        });
-        const result = await firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifierForgot);
-        confirmationResultGlobal = result;
-        alert("Real SMS OTP sent successfully to " + phoneNumber);
-        btn.textContent = "Sent ✓";
-      } catch (error) {
-        console.error("Firebase SMS error:", error);
-        alert("Failed to send SMS OTP: " + error.message);
-        btn.disabled = false;
-        btn.textContent = "Send Code";
-        window.recaptchaVerifierForgot = null;
-      }
-    }
-
     let currentUserId = localStorage.getItem('cleanpower_user_id');
     let currentRefCode = '';
     let isPinConfigured = false;
@@ -772,257 +680,82 @@
       document.getElementById('fForgot').style.display = 'block';
     }
 
-    function switchNav(n) {
-      ['tabHome', 'tabTasks', 'tabSpin', 'tabAssets', 'tabTeam', 'tabSupport'].forEach(tab => {
-        document.getElementById(tab).style.display = 'none';
-      });
-      ['nbHome', 'nbTasks', 'nbSpin', 'nbAssets', 'nbTeam', 'nbSupport'].forEach(btn => {
-        document.getElementById(btn).classList.remove('active');
-      });
-
-      const activeTabMap = { home: 'tabHome', tasks: 'tabTasks', spin: 'tabSpin', assets: 'tabAssets', team: 'tabTeam', support: 'tabSupport' };
-      const activeBtnMap = { home: 'nbHome', tasks: 'nbTasks', spin: 'nbSpin', assets: 'nbAssets', team: 'nbTeam', support: 'nbSupport' };
-
-      const targetTab = document.getElementById(activeTabMap[n]);
-      if (targetTab) {
-        targetTab.style.display = 'block';
-        targetTab.style.animation = 'fadeIn 0.3s ease-out';
+    async function requestEmailOtp() {
+      const email = document.getElementById('regEmail').value.trim();
+      const btn = document.getElementById('otpBtn');
+      if (!email || !email.includes('@')) {
+        return alert("Please enter a valid email address.");
       }
-      document.getElementById(activeBtnMap[n]).classList.add('active');
 
-      closeModal();
-      closeSupportModal();
-    }
-
-    function switchGatewayMode(mode) {
-      activeGatewayMode = mode;
-      document.getElementById('tabUpi').classList.toggle('active', mode === 'UPI');
-      document.getElementById('tabCard').classList.toggle('active', mode === 'CARD');
-      document.getElementById('tabNet').classList.toggle('active', mode === 'NET');
-    }
-
-    function setDepositAmount(val) {
-      document.getElementById('depositAmount').value = val;
-      updateDepositBreakdown();
-    }
-
-    function updateDepositBreakdown() {
-      const amt = Number(document.getElementById('depositAmount').value) || 0;
-      document.getElementById('netCreditDisplay').textContent = `₹${amt.toFixed(2)}`;
-    }
-
-    function copyReferralLink() {
-      const link = `${window.location.origin}/?ref=${currentRefCode}`;
-      navigator.clipboard.writeText(link).then(() => { alert("Affiliate link copied!"); });
-    }
-
-    function copyReferralCode() { navigator.clipboard.writeText(currentRefCode).then(() => { alert("Code copied!"); }); }
-
-    function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'block'; }
-    function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
-
-    function updateCountdown() {
-      if (!nextSettlementTime) return;
-      const now = Date.now();
-      const diff = Math.max(0, nextSettlementTime - now);
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const secs = Math.floor((diff % (1000 * 60)) / 1000);
-      const f = (n) => String(n).padStart(2, '0');
-      const clockElem = document.getElementById('countdownClock');
-      if (clockElem) clockElem.textContent = `${f(hours)}h ${f(mins)}m ${f(secs)}s`;
-    }
-    setInterval(updateCountdown, 1000);
-
-    async function launchEnterpriseGateway() {
-      const amt = document.getElementById('depositAmount').value;
-      if (!amt || Number(amt) < 200) return alert("Minimum deposit amount is ₹200.");
-
-      const payBtn = document.getElementById('payNowBtn');
-      const processingState = document.getElementById('depositProcessingState');
-      const statusText = document.getElementById('depositStatusText');
-
-      payBtn.style.display = 'none';
-      processingState.style.display = 'block';
-      statusText.textContent = "Transmitting Deposit Payload to Admin Queue...";
+      btn.disabled = true;
+      btn.textContent = "Sending...";
 
       try {
-        const res = await fetch('/api/create-payment-order', {
+        const res = await fetch('/api/send-email-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUserId, amount: amt })
+          body: JSON.stringify({ email })
         });
         const data = await res.json();
-        if (!res.ok) { payBtn.style.display = 'block'; processingState.style.display = 'none'; return alert(data.error); }
+        if (!res.ok) throw new Error(data.error);
 
-        setTimeout(() => {
-          statusText.textContent = "Deposit Pending Admin Approval. Added to Ledger!";
-          setTimeout(() => {
-            payBtn.style.display = 'block';
-            processingState.style.display = 'none';
-            closeModal();
-            updateDashboard();
-          }, 2000);
-        }, 1500);
-      } catch (e) {
-        payBtn.style.display = 'block';
-        processingState.style.display = 'none';
-        alert("Gateway connection error.");
+        alert("Email OTP sent successfully to " + email);
+        btn.textContent = "Sent ✓";
+      } catch (error) {
+        console.error("Email OTP error:", error);
+        alert("Failed to send Email OTP: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Send Code";
       }
     }
 
-    async function submitWithdrawalRequest() {
-      const amt = document.getElementById('withdrawAmount').value;
-      const upi = document.getElementById('withdrawUpi').value;
-      const pin = document.getElementById('withdrawPin').value;
-
-      if (!amt || Number(amt) < 200) return alert("Minimum withdrawal threshold is ₹200.");
-      if (!upi) return alert("Destination UPI identifier is required.");
-      if (!pin || pin.length !== 6) return alert("Please enter your 6-digit Security PIN.");
-
-      try {
-        const res = await fetch('/api/withdraw', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUserId, amount: amt, upiId: upi, pin })
-        });
-        const data = await res.json();
-        if (!res.ok) return alert(data.error);
-
-        alert(data.message);
-        closeModal();
-        updateDashboard();
-      } catch (e) { alert("Withdrawal transmission error."); }
-    }
-
-    async function completeDailyTask(taskId, reward) {
-      const res = await fetch('/api/complete-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, taskId, reward })
-      });
-      const data = await res.json();
-      if (!res.ok) alert(data.error);
-      else { alert(data.message); updateDashboard(); }
-    }
-
-    async function submitSupportTicket() {
-      const subject = document.getElementById('ticketSubject').value;
-      const message = document.getElementById('ticketMessage').value;
-      if (!subject || !message) return alert("All fields are required.");
-
-      const res = await fetch('/api/support/ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, subject, message })
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.error);
-      alert(data.message);
-      document.getElementById('ticketSubject').value = '';
-      document.getElementById('ticketMessage').value = '';
-      updateDashboard();
-    }
-
-    const segments = [{ label: "₹10", color: "#1e3a8a" }, { label: "₹25", color: "#065f46" }, { label: "Try Again", color: "#374151" }, { label: "₹50", color: "#b45309" }, { label: "₹5", color: "#0284c7" }, { label: "₹100", color: "#7c3aed" }];
-
-    function drawSpinWheel() {
-      const canvas = document.getElementById('wheelCanvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const radius = canvas.width / 2;
-      const anglePerSegment = (2 * Math.PI) / segments.length;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let i = 0; i < segments.length; i++) {
-        const angle = i * anglePerSegment;
-        ctx.beginPath();
-        ctx.fillStyle = segments[i].color;
-        ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, angle, angle + anglePerSegment);
-        ctx.lineTo(radius, radius);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.save();
-        ctx.translate(radius, radius);
-        ctx.rotate(angle + anglePerSegment / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 14px sans-serif";
-        ctx.fillText(segments[i].label, radius - 16, 4);
-        ctx.restore();
+    async function requestEmailOtpReset() {
+      const email = document.getElementById('forgotEmail').value.trim();
+      const btn = document.getElementById('forgotOtpBtn');
+      if (!email || !email.includes('@')) {
+        return alert("Please enter a valid email address.");
       }
-    }
 
-    async function executeWheelSpin() {
-      if (isSpinning) return;
-      const spinBtn = document.getElementById('spinActionBtn');
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
       try {
-        const res = await fetch('/api/spin-wheel', {
+        const res = await fetch('/api/send-email-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUserId })
+          body: JSON.stringify({ email })
         });
         const data = await res.json();
-        if (!res.ok) return alert(data.error);
+        if (!res.ok) throw new Error(data.error);
 
-        isSpinning = true;
-        spinBtn.disabled = true;
-        const canvas = document.getElementById('wheelCanvas');
-        const degreesPerSegment = 360 / segments.length;
-        const segmentCenterAngle = (data.segmentIndex * degreesPerSegment) + (degreesPerSegment / 2);
-        const targetOffset = (270 - segmentCenterAngle + 360) % 360;
-        const finalRotation = currentWheelAngle + (5 * 360) + (targetOffset - (currentWheelAngle % 360) + 360) % 360;
-        currentWheelAngle = finalRotation;
-
-        canvas.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.25, 1)";
-        canvas.style.transform = `rotate(${finalRotation}deg)`;
-
-        setTimeout(() => {
-          isSpinning = false;
-          alert(data.message);
-          updateDashboard();
-        }, 4200);
-      } catch (err) { isSpinning = false; spinBtn.disabled = false; }
-    }
-
-    async function configureSecurityPin() {
-      const pin = document.getElementById('inputNewPin').value;
-      if (!pin || pin.length !== 6) return alert("PIN must be 6 digits.");
-      const res = await fetch('/api/set-txn-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUserId, pin })
-      });
-      const data = await res.json();
-      if (!res.ok) alert(data.error);
-      else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
+        alert("Email OTP sent successfully to " + email);
+        btn.textContent = "Sent ✓";
+      } catch (error) {
+        console.error("Email OTP error:", error);
+        alert("Failed to send Email OTP: " + error.message);
+        btn.disabled = false;
+        btn.textContent = "Send Code";
+      }
     }
 
     async function handleRegister() {
       const name = document.getElementById('regName').value;
-      const phone = document.getElementById('regPhone').value;
+      const email = document.getElementById('regEmail').value;
       const otp = document.getElementById('regOtp').value;
       const password = document.getElementById('regPass').value;
       const refCode = document.getElementById('regRef').value;
+      
       if (!hasSpecialChar(password)) return alert("Password needs a special character.");
-      if (!confirmationResultGlobal) return alert("Please request and verify Firebase SMS OTP first.");
-      if (!otp) return alert("Please enter the SMS code.");
+      if (!otp) return alert("Please enter the email code.");
 
-      try {
-        await confirmationResultGlobal.confirm(otp);
-      } catch (err) {
-        return alert("Invalid Firebase OTP code. Please check and try again.");
-      }
-
-      const res = await fetch('/api/register-with-otp', {
+      const res = await fetch('/api/register-with-email-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, otp: "FIREBASE_VERIFIED", password, refCode })
+        body: JSON.stringify({ name, email, otp, password, refCode })
       });
       const data = await res.json();
       if (!res.ok) return alert(data.error);
+      
       alert(data.message);
       currentUserId = data.userId;
       localStorage.setItem('cleanpower_user_id', currentUserId);
@@ -1030,36 +763,32 @@
     }
 
     async function handleResetPassword() {
-      const phone = document.getElementById('forgotPhone').value;
+      const email = document.getElementById('forgotEmail').value;
       const otp = document.getElementById('forgotOtp').value;
       const newPassword = document.getElementById('forgotNewPass').value;
+      
       if (!hasSpecialChar(newPassword)) return alert("Password needs a special character.");
-      if (!confirmationResultGlobal) return alert("Please verify SMS OTP first.");
+      if (!otp) return alert("Please enter the email code.");
 
-      try {
-        await confirmationResultGlobal.confirm(otp);
-      } catch(err) {
-        return alert("Invalid Firebase OTP code.");
-      }
-
-      const res = await fetch('/api/reset-password', {
+      const res = await fetch('/api/reset-password-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, otp: "FIREBASE_VERIFIED", newPassword })
+        body: JSON.stringify({ email, otp, newPassword })
       });
       const data = await res.json();
       if (!res.ok) return alert(data.error);
+      
       alert(data.message);
       switchAuth('log');
     }
 
     async function handleLogin() {
-      const phone = document.getElementById('logPhone').value;
+      const email = document.getElementById('logEmail').value;
       const password = document.getElementById('logPass').value;
-      const res = await fetch('/api/login', {
+      const res = await fetch('/api/login-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password })
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (!res.ok) return alert(data.error);
@@ -1247,6 +976,109 @@
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('biometricLock').style.display = 'none';
       }
+    }
+
+    function switchGatewayMode(mode) {
+      activeGatewayMode = mode;
+      document.getElementById('tabUpi').classList.toggle('active', mode === 'UPI');
+      document.getElementById('tabCard').classList.toggle('active', mode === 'CARD');
+      document.getElementById('tabNet').classList.toggle('active', mode === 'NET');
+    }
+
+    function setDepositAmount(val) {
+      document.getElementById('depositAmount').value = val;
+      updateDepositBreakdown();
+    }
+
+    function updateDepositBreakdown() {
+      const amt = Number(document.getElementById('depositAmount').value) || 0;
+      document.getElementById('netCreditDisplay').textContent = `₹${amt.toFixed(2)}`;
+    }
+
+    function copyReferralLink() {
+      const link = `${window.location.origin}/?ref=${currentRefCode}`;
+      navigator.clipboard.writeText(link).then(() => { alert("Affiliate link copied!"); });
+    }
+
+    function copyReferralCode() { navigator.clipboard.writeText(currentRefCode).then(() => { alert("Code copied!"); }); }
+
+    function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'block'; }
+    function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
+
+    const segments = [{ label: "₹10", color: "#1e3a8a" }, { label: "₹25", color: "#065f46" }, { label: "Try Again", color: "#374151" }, { label: "₹50", color: "#b45309" }, { label: "₹5", color: "#0284c7" }, { label: "₹100", color: "#7c3aed" }];
+
+    function drawSpinWheel() {
+      const canvas = document.getElementById('wheelCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const radius = canvas.width / 2;
+      const anglePerSegment = (2 * Math.PI) / segments.length;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < segments.length; i++) {
+        const angle = i * anglePerSegment;
+        ctx.beginPath();
+        ctx.fillStyle = segments[i].color;
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, angle, angle + anglePerSegment);
+        ctx.lineTo(radius, radius);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(radius, radius);
+        ctx.rotate(angle + anglePerSegment / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillText(segments[i].label, radius - 16, 4);
+        ctx.restore();
+      }
+    }
+
+    async function executeWheelSpin() {
+      if (isSpinning) return;
+      const spinBtn = document.getElementById('spinActionBtn');
+      try {
+        const res = await fetch('/api/spin-wheel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+
+        isSpinning = true;
+        spinBtn.disabled = true;
+        const canvas = document.getElementById('wheelCanvas');
+        const degreesPerSegment = 360 / segments.length;
+        const segmentCenterAngle = (data.segmentIndex * degreesPerSegment) + (degreesPerSegment / 2);
+        const targetOffset = (270 - segmentCenterAngle + 360) % 360;
+        const finalRotation = currentWheelAngle + (5 * 360) + (targetOffset - (currentWheelAngle % 360) + 360) % 360;
+        currentWheelAngle = finalRotation;
+
+        canvas.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.25, 1)";
+        canvas.style.transform = `rotate(${finalRotation}deg)`;
+
+        setTimeout(() => {
+          isSpinning = false;
+          alert(data.message);
+          updateDashboard();
+        }, 4200);
+      } catch (err) { isSpinning = false; spinBtn.disabled = false; }
+    }
+
+    async function configureSecurityPin() {
+      const pin = document.getElementById('inputNewPin').value;
+      if (!pin || pin.length !== 6) return alert("PIN must be 6 digits.");
+      const res = await fetch('/api/set-txn-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserId, pin })
+      });
+      const data = await res.json();
+      if (!res.ok) alert(data.error);
+      else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
     }
 
     startApp();
