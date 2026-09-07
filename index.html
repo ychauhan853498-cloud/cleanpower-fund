@@ -680,6 +680,28 @@
       document.getElementById('fForgot').style.display = 'block';
     }
 
+    function switchNav(n) {
+      ['tabHome', 'tabTasks', 'tabSpin', 'tabAssets', 'tabTeam', 'tabSupport'].forEach(tab => {
+        document.getElementById(tab).style.display = 'none';
+      });
+      ['nbHome', 'nbTasks', 'nbSpin', 'nbAssets', 'nbTeam', 'nbSupport'].forEach(btn => {
+        document.getElementById(btn).classList.remove('active');
+      });
+
+      const activeTabMap = { home: 'tabHome', tasks: 'tabTasks', spin: 'tabSpin', assets: 'tabAssets', team: 'tabTeam', support: 'tabSupport' };
+      const activeBtnMap = { home: 'nbHome', tasks: 'nbTasks', spin: 'nbSpin', assets: 'nbAssets', team: 'nbTeam', support: 'nbSupport' };
+
+      const targetTab = document.getElementById(activeTabMap[n]);
+      if (targetTab) {
+        targetTab.style.display = 'block';
+        targetTab.style.animation = 'fadeIn 0.3s ease-out';
+      }
+      document.getElementById(activeBtnMap[n]).classList.add('active');
+
+      closeModal();
+      closeSupportModal();
+    }
+
     async function requestEmailOtp() {
       const email = document.getElementById('regEmail').value.trim();
       const btn = document.getElementById('otpBtn');

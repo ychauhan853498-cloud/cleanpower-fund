@@ -471,7 +471,7 @@ app.post('/api/admin/recharge-action', async (req, res) => {
 
 app.post('/api/admin/withdraw-action', async (req, res) => {
   const { requestId, action } = req.body;
-  const reqData = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
+  const reqData = alignReq = await db.get('SELECT * FROM withdrawal_requests WHERE id = ?', [requestId]);
   const timeNow = new Date().toLocaleTimeString();
 
   if (action === 'approve') {
