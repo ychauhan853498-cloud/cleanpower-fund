@@ -58,7 +58,7 @@ const Transaction = mongoose.model('Transaction', transactionSchema);
 const rechargeRequestSchema = new mongoose.Schema({
   user_id: mongoose.Schema.Types.ObjectId,
   amount: Number,
-  utr: String,
+  utr: { type: String, unique: true }, // Duplicate UTR prevention constraint
   time: String,
   status: { type: String, default: 'Pending' }
 });
@@ -246,6 +246,53 @@ app.get('/api/live-stream', (req, res) => {
   req.on('close', () => sseClients.delete(userId));
 });
 
+// UTR Deposit Verification Route with Duplicate Check
+app.post('/api/verify-utr-deposit', async (req, res) => {
+  try {
+    const { userId, amount, utrNumber } = req.body;
+    if (!userId || !amount || !utrNumber) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    const utrRegex = /^\d{12}$/;
+    if (!utrRegex.test(utrNumber)) {
+      return res.status(400).json({ error: "Invalid UTR format. Must be exactly 12 digits." });
+    }
+
+    // Check duplicate UTR in database
+    const existingUtr = await RechargeRequest.findOne({ utr: utrNumber });
+    if (existingUtr) {
+      return res.status(400).json({ error: "Yeh UTR number pehle hi use ho chuka hai! Duplicate transactions allow nahi hain." });
+    }
+
+    const timeNow = new Date().toLocaleTimeString();
+
+    await RechargeRequest.create({
+      user_id: userId,
+      amount: Number(amount),
+      utr: utrNumber,
+      time: timeNow,
+      status: 'Pending'
+    });
+
+    await Transaction.create({
+      user_id: userId,
+      type: `DEPOSIT SUBMITTED (UTR: ${utrNumber})`,
+      amount: Number(amount),
+      time: timeNow,
+      status: 'Pending Verification'
+    });
+
+    notifyUserLive(userId);
+    res.json({ message: "UTR successfully submitted! Admin verification ke baad amount credit ho jayega." });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Yeh UTR number pehle hi submit ho chuka hai." });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/send-email-otp', async (req, res) => {
   try {
     const { email } = req.body;
@@ -274,7 +321,6 @@ app.post('/api/send-email-otp', async (req, res) => {
 
     res.json({ message: "OTP sent successfully to your email!" });
   } catch (err) {
-    console.error("OTP Error:", err);
     res.status(500).json({ error: "Failed to send email OTP: " + err.message });
   }
 });
@@ -323,7 +369,6 @@ app.post('/api/register-with-email-otp', async (req, res) => {
     }
     res.json({ message: "Registration successful. ₹50 credited.", userId: newUser._id });
   } catch (err) {
-    console.error("Registration Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -368,7 +413,6 @@ app.post('/api/login-email', async (req, res) => {
     
     res.json({ message: "Login successful.", userId: user._id });
   } catch (err) {
-    console.error("Login Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -643,120 +687,6 @@ app.get('/api/admin/overview', async (req, res) => {
   }
 });
 
-app.get('/api/admin/users', async (req, res) => {
-  try {
-    const users = await User.find({}).sort({ _id: -1 }).lean();
-    const formattedUsers = users.map(u => ({ ...u, fullname: u.name, email: u.phone, status: 'Active' }));
-    res.json({ success: true, users: formattedUsers });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/admin/kyc-action', async (req, res) => {
-  try {
-    const { userId, status } = req.body;
-    await User.findByIdAndUpdate(userId, { kyc_status: status });
-    notifyUserLive(userId);
-    res.json({ message: `KYC status updated to ${status}.` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/ticket-resolve', async (req, res) => {
-  try {
-    const { ticketId } = req.body;
-    await SupportTicket.findByIdAndUpdate(ticketId, { status: "Resolved" });
-    res.json({ message: "Support ticket marked as resolved." });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/broadcast', async (req, res) => {
-  try {
-    const { message } = req.body;
-    const users = await User.find({}, '_id');
-    const timeNow = new Date().toLocaleTimeString();
-    for (const u of users) {
-      await Notification.create({ user_id: u._id, title: "Platform Announcement 📢", message, time: timeNow });
-      notifyUserLive(u._id);
-    }
-    res.json({ message: "Announcement broadcasted successfully to all users!" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/admin/user-history', async (req, res) => {
-  try {
-    const userId = req.query.userId;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, error: "User not found" });
-    const plans = await UserPlan.find({ user_id: userId });
-    const referrals = await User.find({ referred_by: user.referral_code }, 'id name phone');
-    res.json({ success: true, user, plans, referrals, teamCount: referrals.length });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post('/api/admin/suspend-user', async (req, res) => {
-  try {
-    const { userId, suspend } = req.body;
-    await User.findByIdAndUpdate(userId, { is_suspended: suspend ? 1 : 0 });
-    notifyUserLive(userId);
-    res.json({ success: true, message: `User account status updated successfully.` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/create-plan', async (req, res) => {
-  try {
-    const { planName, tier, cost, dailyReturn, durationDays } = req.body;
-    await CustomPlan.create({ plan_name: planName, tier, cost, daily_return: dailyReturn, duration_days: durationDays });
-    res.json({ success: true, message: "Investment plan created successfully." });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/admin/users/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { wallet_balance, adjustment_type, amount, reason } = req.body;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, error: "User not found" });
-
-    if (adjustment_type && amount) {
-      const amt = Number(amount);
-      if (adjustment_type === 'credit') user.wallet_balance += amt;
-      else user.wallet_balance -= amt;
-      await user.save();
-      await Transaction.create({ user_id: userId, type: `ADMIN ${adjustment_type.toUpperCase()} (${reason || 'Manual Adjustment'})`, amount: adjustment_type === 'credit' ? amt : -amt, time: new Date().toLocaleTimeString(), status: 'Settled' });
-    } else if (wallet_balance !== undefined) {
-      user.wallet_balance = wallet_balance;
-      await user.save();
-    }
-    notifyUserLive(userId);
-    res.json({ success: true, message: "User wallet updated successfully" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.delete('/api/admin/users/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-    await User.findByIdAndDelete(userId);
-    res.json({ success: true, message: "User deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 app.post('/api/admin/recharge-action', async (req, res) => {
   try {
     const { requestId, action } = req.body;
@@ -787,44 +717,6 @@ app.post('/api/admin/recharge-action', async (req, res) => {
       await Notification.create({ user_id: reqData.user_id, title: "Deposit Rejected ❌", message: `Your deposit request of ₹${reqData.amount} was rejected by admin.`, time: timeNow });
       notifyUserLive(reqData.user_id);
       res.json({ message: "Deposit rejected." });
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/withdraw-action', async (req, res) => {
-  try {
-    const { requestId, action } = req.body;
-    const reqData = await WithdrawalRequest.findById(requestId);
-    if (!reqData) return res.status(404).json({ error: "Request not found." });
-
-    const timeNow = new Date().toLocaleTimeString();
-    const user = await User.findById(reqData.user_id);
-
-    if (action === 'approve') {
-      reqData.status = "Settled";
-      await reqData.save();
-
-      await Transaction.create({ user_id: reqData.user_id, type: `WITHDRAWAL SETTLED`, amount: 0, time: timeNow, status: 'Settled' });
-      await Notification.create({ user_id: reqData.user_id, title: "Withdrawal Settled 🏦", message: `Your withdrawal of ₹${reqData.net_amount} has been sent to your UPI ID.`, time: timeNow });
-
-      notifyUserLive(reqData.user_id);
-      res.json({ message: "Withdrawal settled & payout triggered." });
-    } else {
-      reqData.status = "Rejected";
-      await reqData.save();
-
-      if (user) {
-        user.wallet_balance += reqData.gross_amount;
-        await user.save();
-      }
-
-      await Transaction.create({ user_id: reqData.user_id, type: `WITHDRAWAL REFUNDED`, amount: reqData.gross_amount, time: timeNow, status: 'Refunded' });
-      await Notification.create({ user_id: reqData.user_id, title: "Withdrawal Refunded ⚠️", message: `Your withdrawal of ₹${reqData.gross_amount} was rejected. Funds have been refunded to your wallet.`, time: timeNow });
-
-      notifyUserLive(reqData.user_id);
-      res.json({ message: "Withdrawal rejected & refunded." });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });

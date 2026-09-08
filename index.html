@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CleanPower Global Infrastructure Fund</title>
   
-  <!-- Google Search Console Verification Meta Tag Integration -->
   <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
 
   <style>
@@ -118,8 +117,8 @@
     .float-btn { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 6px 20px rgba(0,0,0,0.5); cursor: pointer; text-decoration: none; border: 2px solid rgba(255,255,255,0.2); background: #229ED9; color: white; transition: transform 0.2s; }
     .float-btn:hover { transform: scale(1.1); }
 
-    input, textarea { width: 100%; padding: 14px; margin-bottom: 14px; border-radius: 12px; border: 1px solid var(--border); background: #070d1d; color: white; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
+    input, select, textarea { width: 100%; padding: 14px; margin-bottom: 14px; border-radius: 12px; border: 1px solid var(--border); background: #070d1d; color: white; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2); }
     .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--accent); color: white; font-weight: 800; cursor: pointer; font-size: 14px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3); transition: all 0.2s ease; }
     .btn-main:hover { opacity: 0.95; transform: translateY(-1px); }
     .btn-main:active { transform: scale(0.98); }
@@ -134,16 +133,6 @@
     th { background: #070d1d; color: var(--text-muted); padding: 12px 14px; text-align: left; font-size: 10px; text-transform: uppercase; }
     td { padding: 12px 14px; border-bottom: 1px solid var(--border); }
     .red { color: #f87171 !important; }
-
-    .gateway-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-    .gateway-tab { flex: 1; padding: 10px; background: #070d1d; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); font-weight: 700; font-size: 11px; cursor: pointer; text-align: center; transition: all 0.2s; }
-    .gateway-tab.active { background: rgba(14, 165, 233, 0.15); border-color: var(--accent); color: var(--accent); }
-
-    .deposit-radar { position: relative; width: 80px; height: 80px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; }
-    .deposit-radar::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); animation: radarPulse 1.8s infinite ease-out; }
-    .deposit-radar::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent-green); animation: radarPulse 1.8s infinite ease-out 0.9s; }
-    .radar-core { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 2; box-shadow: 0 0 15px var(--accent); }
-    @keyframes radarPulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
 
     @keyframes modalPopIn {
       0% { transform: scale(0.85) translateY(20px); opacity: 0; }
@@ -162,139 +151,26 @@
     .chatbot-send-btn { background: var(--accent); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition: opacity 0.2s; }
     .chatbot-send-btn:hover { opacity: 0.9; }
 
-    /* Team section animations */
     @keyframes teamCardGlow {
       0% { box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
       50% { box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45); }
       100% { box-shadow: 0 10px 25px rgba(79, 70, 229, 0.25); }
     }
-    .team-banner {
-      background: linear-gradient(135deg, #4f46e5, #4338ca);
-      border-radius: 22px;
-      padding: 22px 24px;
-      color: white;
-      margin-bottom: 16px;
-      animation: teamCardGlow 4s ease-in-out infinite;
-      transition: transform 0.3s ease;
-    }
+    .team-banner { background: linear-gradient(135deg, #4f46e5, #4338ca); border-radius: 22px; padding: 22px 24px; color: white; margin-bottom: 16px; animation: teamCardGlow 4s ease-in-out infinite; transition: transform 0.3s ease; }
     .team-banner:hover { transform: translateY(-2px); }
-    .team-stat-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      text-align: center;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .team-stat-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.15);
-    }
-    .share-action-btn {
-      background: rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      text-align: center;
-      font-size: 12px;
-      transition: background 0.2s, transform 0.2s;
-    }
-    .share-action-btn:active {
-      transform: scale(0.95);
-      background: rgba(255, 255, 255, 0.3);
-    }
+    .team-stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .team-stat-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.15); }
+    .share-action-btn { background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-align: center; font-size: 12px; transition: background 0.2s, transform 0.2s; }
+    .share-action-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.3); }
 
-    /* Live Social Proof Toast Animation */
-    #liveToast {
-      position: fixed;
-      bottom: 80px;
-      left: 16px;
-      right: 16px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--accent-green);
-      border-radius: 14px;
-      padding: 12px 16px;
-      z-index: 150;
-      max-width: 320px;
-      margin: 0 auto;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-      backdrop-filter: blur(10px);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transform: translateY(150%);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-      pointer-events: none;
-    }
-    #liveToast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-    .toast-icon {
-      font-size: 20px;
-      background: rgba(255, 255, 255, 0.08);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
+    #liveToast { position: fixed; bottom: 80px; left: 16px; right: 16px; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border); border-left: 4px solid var(--accent-green); border-radius: 14px; padding: 12px 16px; z-index: 150; max-width: 320px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; gap: 12px; transform: translateY(150%); opacity: 0; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; pointer-events: none; }
+    #liveToast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 20px; background: rgba(255, 255, 255, 0.08); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-    /* Lucky Spin Card Component inside Tasks Tab */
-    .spin-section-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
-      margin-top: 16px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    .wheel-container {
-      position: relative;
-      width: 260px;
-      height: 260px;
-      margin: 14px auto;
-    }
-    .wheel-pointer {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-top: 16px solid var(--accent-yellow);
-      z-index: 10;
-    }
-    .wheel-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 50px;
-      height: 50px;
-      background: var(--bg-primary);
-      border: 2px solid var(--accent-yellow);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--accent-yellow);
-      z-index: 5;
-    }
+    .spin-section-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-top: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .wheel-container { position: relative; width: 260px; height: 260px; margin: 14px auto; }
+    .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 16px solid var(--accent-yellow); z-index: 10; }
+    .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: var(--bg-primary); border: 2px solid var(--accent-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--accent-yellow); z-index: 5; }
   </style>
 </head>
 <body>
@@ -325,7 +201,6 @@
       <div id="fReg" style="display: none;">
         <input type="text" id="regName" placeholder="Full Legal Name" />
         <input type="email" id="regEmail" placeholder="Email Address" />
-        
         <div class="otp-row">
           <input type="number" id="regOtp" placeholder="Email Code" />
           <button type="button" class="btn-otp" id="otpBtn" onclick="requestEmailOtp()">Send Code</button>
@@ -340,7 +215,6 @@
       <div id="fForgot" style="display: none;">
         <h3 style="margin-top:0; color:var(--accent); font-size:15px;">Security Credential Reset</h3>
         <input type="email" id="forgotEmail" placeholder="Registered Email Address" />
-        
         <div class="otp-row">
           <input type="number" id="forgotOtp" placeholder="Email Code" />
           <button type="button" class="btn-otp" id="forgotOtpBtn" onclick="requestEmailOtpReset()">Send Code</button>
@@ -393,18 +267,9 @@
           </div>
 
           <div class="portfolio-breakdown-grid">
-            <div class="portfolio-stat-card">
-              <span>Solar Capital</span>
-              <b id="amtSolar">₹0</b>
-            </div>
-            <div class="portfolio-stat-card">
-              <span>Wind Capital</span>
-              <b id="amtWind">₹0</b>
-            </div>
-            <div class="portfolio-stat-card">
-              <span>Hydro Capital</span>
-              <b id="amtHydro">₹0</b>
-            </div>
+            <div class="portfolio-stat-card"><span>Solar Capital</span><b id="amtSolar">₹0</b></div>
+            <div class="portfolio-stat-card"><span>Wind Capital</span><b id="amtWind">₹0</b></div>
+            <div class="portfolio-stat-card"><span>Hydro Capital</span><b id="amtHydro">₹0</b></div>
           </div>
         </div>
 
@@ -464,9 +329,7 @@
             <div>Daily Yield<b class="green">₹35/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹500</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('Photovoltaic Generation Array 1kW', 'VIP1', 500, 35, 45)">Subscribe ₹500</button>
         </div>
 
         <div class="plan-card">
@@ -479,9 +342,7 @@
             <div>Daily Yield<b class="green">₹200/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹2,500</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('Commercial Rooftop Microgrid 5kW', 'VIP2', 2500, 200, 45)">Subscribe ₹2,500</button>
         </div>
 
         <div class="plan-card">
@@ -494,9 +355,7 @@
             <div>Daily Yield<b class="green">₹900/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹10,000</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('Mega-Scale Clean Energy Facility 20kW', 'VIP3', 10000, 900, 45)">Subscribe ₹10,000</button>
         </div>
 
         <div class="plan-card">
@@ -509,9 +368,7 @@
             <div>Daily Yield<b class="green">₹2,450/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹25,000</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('High-Efficiency Wind Turbine Farm 50kW', 'VIP4', 25000, 2450, 45)">Subscribe ₹25,000</button>
         </div>
 
         <div class="plan-card">
@@ -524,9 +381,7 @@
             <div>Daily Yield<b class="green">₹3,600/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹35,000</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('Utility-Scale Solar Park Grid 100kW', 'VIP4', 35000, 3600, 45)">Subscribe ₹35,000</button>
         </div>
 
         <div class="plan-card">
@@ -539,9 +394,7 @@
             <div>Daily Yield<b class="green">₹5,400/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-            <button class="btn-invest">Subscribe ₹50,000</button>
-          </a>
+          <button class="btn-invest" onclick="investPlan('Offshore Hybrid Green Energy Plant 250kW', 'VIP4', 50000, 5400, 45)">Subscribe ₹50,000</button>
         </div>
       </div>
 
@@ -603,7 +456,6 @@
           <p style="font-size: 11px; opacity: 0.85; margin: 0 0 16px 0; line-height: 1.4;">
             Earn <b style="color: #facc15;">₹250 instant cash reward</b> in your wallet when your invited recruit activates any plan worth <b>₹500 or more</b>!
           </p>
-          
           <div style="display: flex; gap: 10px;">
             <button class="share-action-btn" style="flex:1;" onclick="copyReferralLink()">📋 Copy Link</button>
             <button class="share-action-btn" style="flex:1;" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
@@ -682,23 +534,17 @@
             <h3 style="margin:0; color:var(--accent); font-size:16px; font-weight: 900;">👤 User Profile & KYC Center</h3>
             <span onclick="closeProfileModal()" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
           </div>
-          
           <div style="background:#070d1d; padding:16px; border-radius:14px; border:1px solid var(--border); margin-bottom:16px; font-size:13px;">
             <p style="margin:0 0 8px 0;"><b>Full Name:</b> <span id="profileName" style="color:var(--text-muted);">--</span></p>
             <p style="margin:0 0 8px 0;"><b>Registered Email:</b> <span id="profileEmail" style="color:var(--text-muted);">--</span></p>
             <p style="margin:0 0 8px 0;"><b>Affiliate Code:</b> <span id="profileRef" style="color:var(--accent); font-weight:bold;">--</span></p>
             <p style="margin:0;"><b>KYC Status:</b> <span id="profileKycStatus" style="color:var(--accent-yellow); font-weight:bold;">Pending Verification ⚠️</span></p>
           </div>
-
           <div class="section-header" style="margin-top:0;">Complete KYC Verification</div>
           <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">Submit your legal details to enable seamless instant payouts and full institutional tier access.</p>
-          
           <input type="text" id="kycAadhaar" placeholder="Enter 12-Digit Aadhaar Number" maxlength="12" />
           <input type="text" id="kycPan" placeholder="Enter 10-Digit PAN Number (e.g. ABCDE1234F)" maxlength="10" />
-          
-          <button class="btn-main" style="background:var(--accent-green); margin-top:6px;" onclick="submitKycVerification()">
-            🔒 Submit KYC Documents
-          </button>
+          <button class="btn-main" style="background:var(--accent-green); margin-top:6px;" onclick="submitKycVerification()">🔒 Submit KYC Documents</button>
         </div>
       </div>
 
@@ -749,22 +595,45 @@
         </div>
       </div>
 
+      <!-- Action Modal with UTR Deposit System, QR Code & Copy UPI ID -->
       <div id="actionModal" class="custom-modal">
         <div class="custom-modal-content">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
             <h3 id="modalHead" style="margin:0; font-size:16px; font-weight:900; color:var(--text-main);">Financial Action</h3>
-            <span onclick="closeModal()" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
+            <span onclick="closeModal(); stopDepositTimer();" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
           </div>
           
-          <div id="depositSection" style="display:none; text-align: center; padding: 10px 0;">
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-              Complete your deposit securely via our verified Instamojo Smart Page.
-            </p>
-            <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
-              <button type="button" class="btn-main" style="background: var(--accent-green); font-weight: 900;">
-                🚀 Proceed to Instamojo Payment Page
+          <div id="depositSection" style="display:none; text-align: center; padding: 5px 0;">
+            <div id="depositTimerBox" style="background:#ffebee; color:#c62828; padding:8px; border-radius:6px; font-weight:bold; font-size:15px; margin-bottom:15px;">Time Left: 10:00</div>
+            
+            <div style="background:#fff; padding:16px; border-radius:14px; display:inline-block; margin-bottom:14px; width: 100%; box-sizing: border-box;">
+              <!-- Integrated UPI QR Code Image -->
+              <div style="width:160px; height:160px; margin:0 auto 10px; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <!-- Replace 'data:image/jpeg;base64,...' with your uploaded QR code base64 or image URL if hosted -->
+                <img src="WhatsApp Image 2026-09-08 at 8.11.21 PM.jpeg" alt="UPI QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+              </div>
+              
+              <div style="font-size:13px; color:#1e293b; font-weight:bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span>UPI ID: <b id="upiIdText">powerfund@axl</b></span>
+              </div>
+              
+              <!-- Copy UPI ID Button -->
+              <button type="button" onclick="copyUpiId()" style="background:#0284c7; color:white; border:none; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; width: 100%;">
+                📋 Copy UPI ID
               </button>
-            </a>
+            </div>
+
+            <form id="utrDepositForm" onsubmit="submitUtrDeposit(event)">
+              <div style="text-align:left; margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:bold; color:var(--text-muted);">Deposit Amount (₹)</label>
+                <input type="number" id="depositAmountInput" required placeholder="Enter amount (e.g. 500)" style="margin-bottom:0;" />
+              </div>
+              <div style="text-align:left; margin-bottom:14px;">
+                <label style="font-size:12px; font-weight:bold; color:var(--text-muted);">12-Digit UTR / Reference Number</label>
+                <input type="text" id="utrNumberInput" maxlength="12" pattern="\d{12}" required placeholder="Enter 12-digit UTR" style="margin-bottom:0;" />
+              </div>
+              <button type="submit" id="submitUtrBtn" class="btn-main" style="background:var(--accent-green); font-weight:900;">Submit UTR for Verification</button>
+            </form>
           </div>
 
           <div id="withdrawSection" style="display:none;"></div>
@@ -802,6 +671,7 @@
     let rawBalance = 0;
     let sseConnection = null;
     let loggedInUserData = null;
+    let depositCountdownInterval = null;
 
     const validatePasswordFormat = (pass) => {
       const minLength = pass.length >= 6;
@@ -959,9 +829,7 @@
     async function requestEmailOtp() {
       const email = document.getElementById('regEmail').value.trim();
       const btn = document.getElementById('otpBtn');
-      if (!email || !email.includes('@')) {
-        return alert("Please enter a valid email address.");
-      }
+      if (!email || !email.includes('@')) return alert("Please enter a valid email address.");
 
       btn.disabled = true;
       btn.textContent = "Sending...";
@@ -978,7 +846,6 @@
         alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
-        console.error("Email OTP error:", error);
         alert("Failed to send Email OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
@@ -988,9 +855,7 @@
     async function requestEmailOtpReset() {
       const email = document.getElementById('forgotEmail').value.trim();
       const btn = document.getElementById('forgotOtpBtn');
-      if (!email || !email.includes('@')) {
-        return alert("Please enter a valid email address.");
-      }
+      if (!email || !email.includes('@')) return alert("Please enter a valid email address.");
 
       btn.disabled = true;
       btn.textContent = "Sending...";
@@ -1007,7 +872,6 @@
         alert("OTP generated! Check your email / backend console.");
         btn.textContent = "Sent ✓";
       } catch (error) {
-        console.error("Email OTP error:", error);
         alert("Failed to send Email OTP: " + error.message);
         btn.disabled = false;
         btn.textContent = "Send Code";
@@ -1137,7 +1001,7 @@
         loggedInUserData = data.user;
         currentRefCode = data.user.referral_code;
         isPinConfigured = data.user.hasPin;
-        nextSettlementTime = data.nextSettlementTimestamp;
+        nextSettlementTimestamp = data.nextSettlementTimestamp;
         rawBalance = data.user.wallet_balance;
 
         document.getElementById('dispUserName').textContent = `${data.user.name}'s Account`;
@@ -1152,20 +1016,13 @@
           document.getElementById('statPayouts').textContent = `₹${(data.platformStats.totalPayouts / 100000).toFixed(2)} Lakhs`;
         }
 
-        let solarTotal = 0;
-        let windTotal = 0;
-        let hydroTotal = 0;
-
+        let solarTotal = 0, windTotal = 0, hydroTotal = 0;
         if (data.myPlans && data.myPlans.length > 0) {
           data.myPlans.forEach(p => {
             const nameLower = p.plan_name.toLowerCase();
-            if (nameLower.includes('wind') || nameLower.includes('turbine')) {
-              windTotal += p.cost;
-            } else if (nameLower.includes('hydro')) {
-              hydroTotal += p.cost;
-            } else {
-              solarTotal += p.cost;
-            }
+            if (nameLower.includes('wind') || nameLower.includes('turbine')) windTotal += p.cost;
+            else if (nameLower.includes('hydro')) hydroTotal += p.cost;
+            else solarTotal += p.cost;
           });
         } else {
           solarTotal = 600; windTotal = 250; hydroTotal = 150;
@@ -1189,9 +1046,7 @@
         document.getElementById('amtHydro').textContent = `₹${hydroTotal.toLocaleString()}`;
 
         const invested = data.user.total_invested || 0;
-        let nextTarget = 2500;
-        let currentTierName = "VIP 1";
-        let nextTierName = "VIP 2";
+        let nextTarget = 2500, currentTierName = "VIP 1", nextTierName = "VIP 2";
         if (invested >= 25000) { currentTierName = "VIP 4"; nextTierName = "Max Tier"; nextTarget = 25000; }
         else if (invested >= 10000) { currentTierName = "VIP 3"; nextTierName = "VIP 4"; nextTarget = 25000; }
         else if (invested >= 2500) { currentTierName = "VIP 2"; nextTierName = "VIP 3"; nextTarget = 10000; }
@@ -1317,9 +1172,7 @@
     }
 
     function handleChatKeyPress(e) {
-      if (e.key === 'Enter') {
-        sendChatMessage();
-      }
+      if (e.key === 'Enter') sendChatMessage();
     }
 
     function sendChatMessage() {
@@ -1328,7 +1181,6 @@
       if (!text) return;
 
       const chatMessages = document.getElementById('chatMessages');
-      
       const userBubble = document.createElement('div');
       userBubble.className = 'chat-bubble user';
       userBubble.textContent = text;
@@ -1339,10 +1191,9 @@
       setTimeout(() => {
         const botBubble = document.createElement('div');
         botBubble.className = 'chat-bubble bot';
-        
         const lower = text.toLowerCase();
         if (lower.includes('deposit') || lower.includes('add money') || lower.includes('recharge')) {
-          botBubble.textContent = "To add money, click 'Deposit' on your wallet card and complete payment via our verified Instamojo Smart Page.";
+          botBubble.textContent = "To add money, click 'Deposit' on your wallet card, scan the QR, and submit your 12-digit UTR number.";
         } else if (lower.includes('withdraw') || lower.includes('payout')) {
           botBubble.textContent = "To withdraw, ensure your 6-digit transaction PIN is configured in the Support tab. Then click 'Withdraw' on your wallet card and submit!";
         } else if (lower.includes('vip') || lower.includes('level')) {
@@ -1350,7 +1201,6 @@
         } else {
           botBubble.textContent = "Thanks for reaching out! For assistance, please submit a support ticket below or join our official Telegram community.";
         }
-
         chatMessages.appendChild(botBubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }, 600);
@@ -1369,6 +1219,89 @@
       updateDashboard();
     }
 
+    // Copy UPI ID function
+    function copyUpiId() {
+      const upiText = document.getElementById('upiIdText').textContent;
+      navigator.clipboard.writeText(upiText).then(() => {
+        alert("UPI ID copied to clipboard: " + upiText);
+      }).catch(err => {
+        alert("Failed to copy UPI ID.");
+      });
+    }
+
+    function stopDepositTimer() {
+      if (depositCountdownInterval) {
+        clearInterval(depositCountdownInterval);
+        depositCountdownInterval = null;
+      }
+    }
+
+    function startDepositTimer() {
+      stopDepositTimer();
+      let timeLeft = 600; // 10 minutes
+      const timerElement = document.getElementById('depositTimerBox');
+      const submitBtn = document.getElementById('submitUtrBtn');
+      const utrInput = document.getElementById('utrNumberInput');
+      const amountInput = document.getElementById('depositAmountInput');
+
+      submitBtn.disabled = false;
+      utrInput.disabled = false;
+      amountInput.disabled = false;
+      timerElement.style.background = "#ffebee";
+      timerElement.style.color = "#c62828";
+
+      depositCountdownInterval = setInterval(() => {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        timerElement.innerHTML = `Time Left: ${minutes}:${seconds}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(depositCountdownInterval);
+          timerElement.innerHTML = "Session Expired!";
+          timerElement.style.background = "#e0e0e0";
+          timerElement.style.color = "#555";
+          submitBtn.disabled = true;
+          utrInput.disabled = true;
+          amountInput.disabled = true;
+        }
+        timeLeft--;
+      }, 1000);
+    }
+
+    async function submitUtrDeposit(event) {
+      event.preventDefault();
+      const amount = Number(document.getElementById('depositAmountInput').value);
+      const utr = document.getElementById('utrNumberInput').value.trim();
+
+      const utrRegex = /^\d{12}$/;
+      if (!utrRegex.test(utr)) {
+        return alert("Kripya ek valid 12-digit UTR number enter karein.");
+      }
+      if (!amount || amount <= 0) {
+        return alert("Valid deposit amount enter karein.");
+      }
+
+      try {
+        const res = await fetch('/api/verify-utr-deposit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUserId, amount, utrNumber: utr })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        alert(data.message);
+        stopDepositTimer();
+        closeModal();
+        updateDashboard();
+      } catch (err) {
+        alert("Deposit error: " + err.message);
+      }
+    }
+
     function openModal(type) {
       closeSupportModal();
       const modal = document.getElementById('actionModal');
@@ -1379,10 +1312,14 @@
       modal.style.display = 'flex';
 
       if (type === 'deposit') {
-        head.textContent = 'Add Funds via Instamojo';
+        head.textContent = 'UPI UTR Deposit & Verification';
         depositSec.style.display = 'block';
         withdrawSec.style.display = 'none';
+        document.getElementById('utrNumberInput').value = '';
+        document.getElementById('depositAmountInput').value = '';
+        startDepositTimer();
       } else {
+        stopDepositTimer();
         depositSec.style.display = 'none';
         withdrawSec.style.display = 'block';
 
@@ -1436,13 +1373,14 @@
       }
     }
 
-    function closeModal() { document.getElementById('actionModal').style.display = 'none'; }
+    function closeModal() {
+      stopDepositTimer();
+      document.getElementById('actionModal').style.display = 'none';
+    }
 
     function initLiveStream() {
       if (!currentUserId) return;
-      if (sseConnection) {
-        sseConnection.close();
-      }
+      if (sseConnection) sseConnection.close();
       sseConnection = new EventSource(`/api/live-stream?userId=${currentUserId}`);
       sseConnection.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -1560,23 +1498,17 @@
       else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
     }
 
-    const sampleNames = [
-      "Rahul S.", "Amit K.", "Priya M.", "Vikram R.", "Ankit P.", 
-      "Neha G.", "Deepak T.", "Sunil V.", "Pooja B.", "Manish D.",
-      "Rohit N.", "Kiran J.", "Aakash L.", "Sanjay K.", "Meenakshi S."
-    ];
-
+    const sampleNames = ["Rahul S.", "Amit K.", "Priya M.", "Vikram R.", "Ankit P.", "Neha G.", "Deepak T.", "Sunil V.", "Pooja B.", "Manish D."];
     const activityTypes = [
-      { type: "deposit", icon: "⚡", text: "completed a recharge of", amounts: [500, 1000, 2500, 5000, 10000], color: "var(--accent-green)" },
-      { type: "withdraw", icon: "🏦", text: "successfully withdrew", amounts: [1200, 3400, 5000, 8200, 15000], color: "var(--accent)" },
-      { type: "invite", icon: "👥", text: "invited a new member & earned", amounts: [250, 500, 750], color: "var(--accent-yellow)" }
+      { type: "deposit", icon: "⚡", text: "completed a recharge of", amounts: [500, 1000, 2500, 5000], color: "var(--accent-green)" },
+      { type: "withdraw", icon: "🏦", text: "successfully withdrew", amounts: [1200, 3400, 5000], color: "var(--accent)" },
+      { type: "invite", icon: "👥", text: "invited a new member & earned", amounts: [250, 500], color: "var(--accent-yellow)" }
     ];
 
     function triggerRandomActivityToast() {
       const name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
       const actObj = activityTypes[Math.floor(Math.random() * activityTypes.length)];
       const amt = actObj.amounts[Math.floor(Math.random() * actObj.amounts.length)];
-      
       const minsAgo = Math.random() > 0.4 ? `${Math.floor(Math.random() * 10) + 1} mins ago` : "Just now";
 
       document.getElementById('toastIcon').textContent = actObj.icon;
@@ -1591,9 +1523,7 @@
       const toast = document.getElementById('liveToast');
       toast.classList.add('show');
 
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3500);
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
 
       const nextTime = Math.floor(Math.random() * 6000) + 6000;
       setTimeout(triggerRandomActivityToast, nextTime);
