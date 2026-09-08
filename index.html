@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CleanPower Global Infrastructure Fund</title>
   
-  <!-- Browser Tab Favicon Logo Integration -->
-  <link rel="icon" type="image/png" href="logo.png">
-  
   <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
 
   <style>
@@ -598,7 +595,7 @@
         </div>
       </div>
 
-      <!-- Action Modal with UTR Deposit System, Robust SVG Vector QR Code & Copy UPI ID -->
+      <!-- Action Modal with UTR Deposit System, 100% Reliable SVG QR Code & Copy UPI ID -->
       <div id="actionModal" class="custom-modal">
         <div class="custom-modal-content">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -612,9 +609,7 @@
             <div style="background:#0f172a; padding:12px; border: 1px solid var(--border); border-radius:14px; display:inline-block; margin-bottom:14px; width: 100%; box-sizing: border-box;">
               <!-- 100% Reliable SVG Vector QR Code Rendering -->
               <div style="width:160px; height:160px; margin:0 auto 10px; background:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding: 6px;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" style="background:#fff;">
-                  <path fill="#000" d="M2,2H10V10H2V2M4,4V8H8V4H4M12,2H14V4H12V2M16,2H22V8H16V2M18,4V6H20V4H18M2,12H6V14H2V12M8,12H10V16H8V12M12,12H16V14H12V12M18,12H22V16H18V12M2,16H4V22H2V16M6,16H8V18H6V16M10,18H14V22H10V18M12,20V22H14V20H12M16,18H22V22H16V18M18,20V20.01H20V20H18Z"/>
-                </svg>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=powerfund@axl&pn=PowerFund" alt="Power Fund Scan & Pay" style="width: 100%; height: 100%; object-fit: contain;" />
               </div>
               
               <div style="font-size:13px; color:#f8fafc; font-weight:bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
@@ -1492,7 +1487,7 @@
     async function configureSecurityPin() {
       const pin = document.getElementById('inputNewPin').value;
       if (!pin || pin.length !== 6) return alert("Security PIN must be exactly 6 digits.");
-      const res = assetFetch('/api/set-txn-pin', {
+      const res = await fetch('/api/set-txn-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId, pin })
