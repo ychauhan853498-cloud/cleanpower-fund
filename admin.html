@@ -188,17 +188,18 @@
             recharges.forEach(r => {
                 const badgeClass = r.status === 'Approved' ? 'badge-approved' : r.status === 'Rejected' ? 'badge-rejected' : 'badge';
                 const tr = document.createElement('tr');
+                const reqId = r._id || r.id;
                 tr.innerHTML = `
-                    <td>#${r.id}</td>
-                    <td><strong>${r.user_name || 'User #' + r.user_id}</strong><br><small style="color:#94a3b8">${r.user_phone || ''}</small></td>
+                    <td>#${reqId.slice(-6)}</td>
+                    <td><strong>${r.user_name || (r.user_id && r.user_id.name) || 'User'}</strong><br><small style="color:#94a3b8">${r.user_phone || (r.user_id && r.user_id.phone) || ''}</small></td>
                     <td style="color:#10b981; font-weight:bold;">₹${r.amount}</td>
                     <td><code>${r.utr}</code></td>
                     <td>${r.time}</td>
                     <td><span class="${badgeClass}">${r.status}</span></td>
                     <td>
                         ${r.status === 'Pending' ? `
-                            <button class="btn btn-approve" onclick="handleRecharge(${r.id}, 'approve')">Approve</button>
-                            <button class="btn btn-reject" onclick="handleRecharge(${r.id}, 'reject')">Reject</button>
+                            <button class="btn btn-approve" onclick="handleRecharge('${reqId}', 'approve')">Approve</button>
+                            <button class="btn btn-reject" onclick="handleRecharge('${reqId}', 'reject')">Reject</button>
                         ` : '<span>Completed</span>'}
                     </td>
                 `;
@@ -216,9 +217,10 @@
             withdrawals.forEach(w => {
                 const badgeClass = w.status === 'Settled' ? 'badge-approved' : w.status === 'Rejected' ? 'badge-rejected' : 'badge';
                 const tr = document.createElement('tr');
+                const reqId = w._id || w.id;
                 tr.innerHTML = `
-                    <td>#${w.id}</td>
-                    <td><strong>${w.user_name || 'User #' + w.user_id}</strong><br><small style="color:#94a3b8">${w.user_phone || ''}</small></td>
+                    <td>#${reqId.slice(-6)}</td>
+                    <td><strong>${w.user_name || (w.user_id && w.user_id.name) || 'User'}</strong><br><small style="color:#94a3b8">${w.user_phone || (w.user_id && w.user_id.phone) || ''}</small></td>
                     <td>₹${w.gross_amount}</td>
                     <td style="color:#f87171">₹${w.fee}</td>
                     <td style="color:#10b981; font-weight:bold;">₹${w.net_amount}</td>
@@ -226,8 +228,8 @@
                     <td><span class="${badgeClass}">${w.status}</span></td>
                     <td>
                         ${w.status === 'Pending' ? `
-                            <button class="btn btn-approve" onclick="handleWithdrawal(${w.id}, 'approve')">Settle</button>
-                            <button class="btn btn-reject" onclick="handleWithdrawal(${w.id}, 'reject')">Reject</button>
+                            <button class="btn btn-approve" onclick="handleWithdrawal('${reqId}', 'approve')">Settle</button>
+                            <button class="btn btn-reject" onclick="handleWithdrawal('${reqId}', 'reject')">Reject</button>
                         ` : '<span>Completed</span>'}
                     </td>
                 `;
@@ -244,10 +246,11 @@
         if (users && users.length > 0) {
             users.forEach(u => {
                 const isSuspended = u.is_suspended === 1;
+                const userId = u._id || u.id;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>#${u.id}</td>
-                    <td><strong>${u.fullname}</strong><br><small style="color:#94a3b8">${u.email}</small></td>
+                    <td>#${userId.slice(-6)}</td>
+                    <td><strong>${u.fullname || u.name}</strong><br><small style="color:#94a3b8">${u.email || u.phone}</small></td>
                     <td style="color:#10b981; font-weight:bold;">₹${u.wallet_balance}</td>
                     <td>₹${u.total_invested}</td>
                     <td>VIP ${u.vip_level}<br><small>${u.txn_pin ? 'PIN Set ✓' : 'No PIN ⚠'}</small></td>
@@ -255,15 +258,15 @@
                         <span class="badge ${u.kyc_status === 'Verified' ? 'badge-approved' : u.kyc_status === 'Rejected' ? 'badge-rejected' : 'badge'}">${u.kyc_status}</span><br>
                         <small style="color:#94a3b8;">Aadhaar: [Aadhaar Redacted]<br>PAN: ${u.pan || 'N/A'}</small>
                         <div style="margin-top:4px;">
-                            ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Verified')">Verify</button>` : ''}
-                            ${u.kyc_status !== 'Rejected' ? `<button class="btn btn-reject" style="padding:2px 6px; font-size:10px;" onclick="handleKyc(${u.id}, 'Rejected')">Reject</button>` : ''}
+                            ${u.kyc_status !== 'Verified' ? `<button class="btn btn-approve" style="padding:2px 6px; font-size:10px;" onclick="handleKyc('${userId}', 'Verified')">Verify</button>` : ''}
+                            ${u.kyc_status !== 'Rejected' ? `<button class="btn btn-reject" style="padding:2px 6px; font-size:10px;" onclick="handleKyc('${userId}', 'Rejected')">Reject</button>` : ''}
                         </div>
                     </td>
                     <td>
-                        <button class="btn btn-approve" style="padding:4px 8px; font-size:11px;" onclick="adjustUserBalance(${u.id}, ${u.wallet_balance})">Balance</button>
-                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewUserHistory(${u.id})">History</button>
-                        <button class="btn ${isSuspended ? 'btn-approve' : 'btn-reject'}" style="padding:4px 8px; font-size:11px;" onclick="toggleSuspend(${u.id}, ${isSuspended ? 0 : 1})">${isSuspended ? 'Unblock' : 'Block'}</button>
-                        <button class="btn btn-reject" style="padding:4px 8px; font-size:11px;" onclick="deleteUser(${u.id})">Delete</button>
+                        <button class="btn btn-approve" style="padding:4px 8px; font-size:11px;" onclick="adjustUserBalance('${userId}', ${u.wallet_balance})">Balance</button>
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewUserHistory('${userId}')">History</button>
+                        <button class="btn ${isSuspended ? 'btn-approve' : 'btn-reject'}" style="padding:4px 8px; font-size:11px;" onclick="toggleSuspend('${userId}', ${isSuspended ? 0 : 1})">${isSuspended ? 'Unblock' : 'Block'}</button>
+                        <button class="btn btn-reject" style="padding:4px 8px; font-size:11px;" onclick="deleteUser('${userId}')">Delete</button>
                     </td>
                 `;
                 uBody.appendChild(tr);
@@ -280,14 +283,15 @@
             tickets.forEach(t => {
                 const badgeClass = t.status === 'Resolved' ? 'badge-approved' : 'badge';
                 const tr = document.createElement('tr');
+                const ticketId = t._id || t.id;
                 tr.innerHTML = `
-                    <td>#${t.id}</td>
-                    <td><strong>${t.user_name || 'User #' + t.user_id}</strong><br><small style="color:#94a3b8">${t.user_phone || ''}</small></td>
+                    <td>#${ticketId.slice(-6)}</td>
+                    <td><strong>${t.user_name || (t.user_id && t.user_id.name) || 'User'}</strong><br><small style="color:#94a3b8">${t.user_phone || (t.user_id && t.user_id.phone) || ''}</small></td>
                     <td><b>${t.subject}</b><br><small>${t.message}</small></td>
                     <td>${t.time}</td>
                     <td><span class="${badgeClass}">${t.status}</span></td>
                     <td>
-                        ${t.status === 'Open' ? `<button class="btn btn-approve" onclick="resolveTicket(${t.id})">Resolve</button>` : '<span>Closed</span>'}
+                        ${t.status === 'Open' ? `<button class="btn btn-approve" onclick="resolveTicket('${ticketId}')">Resolve</button>` : '<span>Closed</span>'}
                     </td>
                 `;
                 tBody.appendChild(tr);
@@ -387,7 +391,8 @@
         if (!cachedAdminData || !cachedAdminData.users) return alert("No data available to export.");
         let csv = "ID,Name,Email,Wallet Balance,Total Invested,VIP Level,KYC Status\n";
         cachedAdminData.users.forEach(u => {
-            csv += `${u.id},"${u.fullname}","${u.email}",${u.wallet_balance},${u.total_invested},${u.vip_level},${u.kyc_status}\n`;
+            const uid = u._id || u.id;
+            csv += `${uid},"${u.fullname || u.name}","${u.email || u.phone}",${u.wallet_balance},${u.total_invested},${u.vip_level},${u.kyc_status}\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
