@@ -624,7 +624,7 @@ app.post('/api/withdraw', async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found." });
     if (!user.txn_pin || user.txn_pin.length !== 6) return res.status(400).json({ error: "Please configure your 6-digit Security PIN first." });
     if (!pin || pin.toString() !== user.txn_pin) return res.status(403).json({ error: "Incorrect Security PIN." });
-    if (!wAmt || wAmt < 200) return res.status(400).json({ error: "Minimum withdrawal amount is ₹200." });
+    if (!wAmt || wAmt < 500) return res.status(400).json({ error: "Minimum withdrawal amount is ₹500." });
     if (wAmt > user.wallet_balance) return res.status(400).json({ error: "Insufficient wallet balance." });
 
     let feePct = user.vip_level === 2 ? 0.04 : user.vip_level === 3 ? 0.03 : user.vip_level >= 4 ? 0.02 : 0.05;
