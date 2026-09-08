@@ -3,7 +3,6 @@ const cors = require('cors');
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const path = require('path');
-const { Cashfree } = require('cashfree-pg');
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://ychauhan853498_db_user:MyPassword123@cluster0.lknpheh.mongodb.net/?appName=Cluster0";
@@ -104,11 +103,6 @@ const customPlanSchema = new mongoose.Schema({
 });
 const CustomPlan = mongoose.model('CustomPlan', customPlanSchema);
 
-// Cashfree Configuration
-Cashfree.XClientId = process.env.CLIENT_ID || "YOUR_CASHFREE_APP_ID";
-Cashfree.XClientSecret = process.env.CLIENT_SECRET || "YOUR_CASHFREE_SECRET_KEY";
-Cashfree.XEnvironment = Cashfree.Environment?.SANDBOX || "SANDBOX";
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -117,7 +111,6 @@ app.use(express.static(__dirname));
 const emailOtpStore = {};
 const sseClients = new Map();
 
-// Strict password validation helper
 const validatePassword = (pass) => {
   if (!pass) return false;
   const minLength = pass.length >= 6;
@@ -572,45 +565,6 @@ app.post('/api/buy-plan', async (req, res) => {
     await checkAndUpdateVipTier(userId);
     notifyUserLive(userId);
     res.json({ message: `Successfully subscribed to ${planName}.` });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/create-payment-order', async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
-    const dep = Number(amount);
-    if (!dep || dep < 200) return res.status(400).json({ error: "Minimum deposit is ₹200." });
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found." });
-
-    const orderId = "ORDER_" + Date.now();
-    var request = {
-      "order_amount": dep,
-      "order_currency": "INR",
-      "order_id": orderId,
-      "customer_details": {
-        "customer_id": user._id.toString(),
-        "customer_phone": user.phone || "9999999999",
-        "customer_email": user.phone || "user@cleanpower.com"
-      },
-      "order_meta": {
-        "return_url": `${req.protocol}://${req.get('host')}/?order_id=${orderId}`
-      }
-    };
-
-    Cashfree.PGCreateOrder("2023-08-01", request).then(async (response) => {
-      const paymentSessionId = response.data.payment_session_id;
-      const timeNow = new Date().toLocaleTimeString();
-
-      await RechargeRequest.create({ user_id: userId, amount: dep, utr: orderId, time: timeNow, status: 'Pending' });
-      res.json({ success: true, paymentSessionId, orderId });
-    }).catch((error) => {
-      console.error("Cashfree API Error:", error.response?.data || error.message);
-      res.status(500).json({ error: "Failed to create Cashfree order." });
-    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

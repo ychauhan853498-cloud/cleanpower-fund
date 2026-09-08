@@ -8,8 +8,6 @@
   <!-- Google Search Console Verification Meta Tag Integration -->
   <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
 
-  <!-- Cashfree Checkout SDK -->
-  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <style>
     :root {
       --bg-primary: #030712;
@@ -466,7 +464,9 @@
             <div>Daily Yield<b class="green">₹35/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Photovoltaic 1kW', 'VIP1', 500, 35, 45)">Subscribe ₹500</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹500</button>
+          </a>
         </div>
 
         <div class="plan-card">
@@ -479,7 +479,9 @@
             <div>Daily Yield<b class="green">₹200/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Microgrid 5kW', 'VIP2', 2500, 200, 45)">Subscribe ₹2,500</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹2,500</button>
+          </a>
         </div>
 
         <div class="plan-card">
@@ -492,7 +494,9 @@
             <div>Daily Yield<b class="green">₹900/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Mega Array 20kW', 'VIP3', 10000, 900, 45)">Subscribe ₹10,000</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹10,000</button>
+          </a>
         </div>
 
         <div class="plan-card">
@@ -505,7 +509,9 @@
             <div>Daily Yield<b class="green">₹2,450/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Wind Turbine Farm 50kW', 'VIP4', 25000, 2450, 45)">Subscribe ₹25,000</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹25,000</button>
+          </a>
         </div>
 
         <div class="plan-card">
@@ -518,7 +524,9 @@
             <div>Daily Yield<b class="green">₹3,600/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Utility Solar Park 100kW', 'VIP4', 35000, 3600, 45)">Subscribe ₹35,000</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹35,000</button>
+          </a>
         </div>
 
         <div class="plan-card">
@@ -531,7 +539,9 @@
             <div>Daily Yield<b class="green">₹5,400/day</b></div>
             <div>Cycle<b>45 Days</b></div>
           </div>
-          <button class="btn-invest" onclick="investPlan('Offshore Hybrid Plant 250kW', 'VIP4', 50000, 5400, 45)">Subscribe ₹50,000</button>
+          <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+            <button class="btn-invest">Subscribe ₹50,000</button>
+          </a>
         </div>
       </div>
 
@@ -555,7 +565,6 @@
           <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask2" onclick="completeDailyTask(2, 15)">Claim ₹15</button>
         </div>
 
-        <!-- Integrated Lucky Spin Wheel Component inside Tasks Tab -->
         <div class="spin-section-card">
           <div class="section-header" style="margin: 0 0 4px 0;">🎡 Daily Lucky Spin & Win</div>
           <p style="font-size:11px; color:var(--text-muted); margin: 0 0 10px 0;">1 Free Spin every 24 hours. Instant wallet credit.</p>
@@ -587,7 +596,6 @@
         </div>
       </div>
 
-      <!-- Integrated Animated Team & Invite Section -->
       <div id="tabTeam" style="display: none;">
         <div class="team-banner">
           <div style="font-size: 12px; opacity: 0.9; font-weight: 600;">🚀 Affiliate Invitation & Rewards Matrix</div>
@@ -748,55 +756,21 @@
             <span onclick="closeModal()" style="cursor:pointer; color:var(--text-muted); font-size:18px; font-weight:bold;">✕</span>
           </div>
           
-          <div id="depositSection" style="display:none;">
-            <div class="gateway-tabs">
-              <div class="gateway-tab active" id="tabUpi" onclick="switchGatewayMode('UPI')">⚡ Instant UPI</div>
-              <div class="gateway-tab" id="tabCard" onclick="switchGatewayMode('CARD')">💳 Cards</div>
-              <div class="gateway-tab" id="tabNet" onclick="switchGatewayMode('NET')">🏦 NetBanking</div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;">
-              <button type="button" onclick="setDepositAmount(500)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹500</button>
-              <button type="button" onclick="setDepositAmount(1000)" style="background:#070d1d; border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹1,000</button>
-              <button type="button" onclick="setDepositAmount(5000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹5,000</button>
-              <button type="button" onclick="setDepositAmount(10000)" style="background:#070d1d; border:1px solid var(--border); color:var(--accent); padding:8px; border-radius:8px; font-weight:700; cursor:pointer; font-size:11px;">₹10k</button>
-            </div>
-
-            <input type="number" id="depositAmount" placeholder="Enter Deposit Amount (Min ₹200)" oninput="updateDepositBreakdown()" />
-            
-            <div id="gatewayInfoBox" style="background:#070d1d; padding:12px; border-radius:10px; margin-bottom:14px; font-size:11px; color:var(--text-muted); border:1px solid var(--border);">
-              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span>Gateway Status:</span>
-                <b style="color:var(--accent-green);">Cashfree Live / Sandbox</b>
-              </div>
-              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                <span>Processing Fee:</span>
-                <b style="color:var(--accent-green);">FREE (0%)</b>
-              </div>
-              <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:4px; margin-top:4px;">
-                <span style="color:var(--text-main); font-weight:700;">Net Wallet Credit:</span>
-                <b style="color:var(--accent-green);" id="netCreditDisplay">₹0.00</b>
-              </div>
-            </div>
-
-            <div id="depositProcessingState" style="display:none; text-align:center; padding: 20px 0; background:#070d1d; border-radius:12px; border:1px solid var(--border); margin-bottom:14px;">
-              <div class="deposit-radar">
-                <div class="radar-core">⚡</div>
-              </div>
-              <div style="color: var(--accent); font-weight: 800; font-size: 13px;" id="depositStatusText">Initializing Cashfree Checkout...</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Please complete payment in the secure popup</div>
-            </div>
-
-            <button type="button" id="payNowBtn" onclick="launchEnterpriseGateway()" style="width:100%; background:var(--accent-green); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-              🔒 Pay with Cashfree Gateway
-            </button>
+          <div id="depositSection" style="display:none; text-align: center; padding: 10px 0;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+              Complete your deposit securely via our verified Instamojo Smart Page.
+            </p>
+            <a href="https://PowerFund.mojo.page/cleanpower-global-fund-investment" target="_blank" style="text-decoration:none;">
+              <button type="button" class="btn-main" style="background: var(--accent-green); font-weight: 900;">
+                🚀 Proceed to Instamojo Payment Page
+              </button>
+            </a>
           </div>
 
           <div id="withdrawSection" style="display:none;"></div>
         </div>
       </div>
 
-      <!-- Live Activity Toast Popup -->
       <div id="liveToast">
         <div class="toast-icon" id="toastIcon">⚡</div>
         <div>
@@ -825,7 +799,6 @@
     let nextSettlementTime = 0;
     let isSpinning = false;
     let currentWheelAngle = 0;
-    let activeGatewayMode = 'UPI';
     let rawBalance = 0;
     let sseConnection = null;
     let loggedInUserData = null;
@@ -846,7 +819,6 @@
       }
     }, 1000);
 
-    // Automatic 2-second polling refresh for user dashboard
     setInterval(() => {
       if (currentUserId) {
         updateDashboard();
@@ -1370,7 +1342,7 @@
         
         const lower = text.toLowerCase();
         if (lower.includes('deposit') || lower.includes('add money') || lower.includes('recharge')) {
-          botBubble.textContent = "To add money, click 'Deposit' on your wallet card, enter your amount, and complete payment via Cashfree gateway.";
+          botBubble.textContent = "To add money, click 'Deposit' on your wallet card and complete payment via our verified Instamojo Smart Page.";
         } else if (lower.includes('withdraw') || lower.includes('payout')) {
           botBubble.textContent = "To withdraw, ensure your 6-digit transaction PIN is configured in the Support tab. Then click 'Withdraw' on your wallet card and submit!";
         } else if (lower.includes('vip') || lower.includes('level')) {
@@ -1407,13 +1379,9 @@
       modal.style.display = 'flex';
 
       if (type === 'deposit') {
-        head.textContent = 'Add Funds via Cashfree';
+        head.textContent = 'Add Funds via Instamojo';
         depositSec.style.display = 'block';
         withdrawSec.style.display = 'none';
-        document.getElementById('depositAmount').value = '';
-        document.getElementById('depositProcessingState').style.display = 'none';
-        document.getElementById('payNowBtn').style.display = 'block';
-        updateDepositBreakdown();
       } else {
         depositSec.style.display = 'none';
         withdrawSec.style.display = 'block';
@@ -1439,49 +1407,6 @@
             </button>
           `;
         }
-      }
-    }
-
-    async function launchEnterpriseGateway() {
-      const amt = Number(document.getElementById('depositAmount').value);
-      if (!amt || amt < 200) return alert("Minimum deposit amount is ₹200.");
-
-      const processingState = document.getElementById('depositProcessingState');
-      const payBtn = document.getElementById('payNowBtn');
-      
-      processingState.style.display = 'block';
-      payBtn.style.display = 'none';
-
-      try {
-        const res = await fetch('/api/create-payment-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUserId, amount: amt })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-
-        const cashfree = Cashfree({ mode: "sandbox" }); 
-        let checkoutOptions = {
-          paymentSessionId: data.paymentSessionId,
-          redirectTarget: "_modal"
-        };
-
-        cashfree.checkout(checkoutOptions).then(function(result) {
-          processingState.style.display = 'none';
-          payBtn.style.display = 'block';
-          if (result.error) {
-            alert("Payment failed: " + result.error.message);
-          } else {
-            alert("Payment session completed successfully!");
-            closeModal();
-            updateDashboard();
-          }
-        });
-      } catch (err) {
-        alert("Gateway initialization failed: " + err.message);
-        processingState.style.display = 'none';
-        payBtn.style.display = 'block';
       }
     }
 
@@ -1545,29 +1470,10 @@
       }
     }
 
-    function switchGatewayMode(mode) {
-      activeGatewayMode = mode;
-      document.getElementById('tabUpi').classList.toggle('active', mode === 'UPI');
-      document.getElementById('tabCard').classList.toggle('active', mode === 'CARD');
-      document.getElementById('tabNet').classList.toggle('active', mode === 'NET');
-    }
-
-    function setDepositAmount(val) {
-      document.getElementById('depositAmount').value = val;
-      updateDepositBreakdown();
-    }
-
-    function updateDepositBreakdown() {
-      const amt = Number(document.getElementById('depositAmount').value) || 0;
-      document.getElementById('netCreditDisplay').textContent = `₹${amt.toFixed(2)}`;
-    }
-
     function copyReferralLink() {
       const link = `${window.location.origin}/?ref=${currentRefCode}`;
       navigator.clipboard.writeText(link).then(() => { alert("Affiliate link copied!"); });
     }
-
-    function copyReferralCode() { navigator.clipboard.writeText(currentRefCode).then(() => { alert("Code copied!"); }); }
 
     function shareViaWhatsApp() {
       const link = `${window.location.origin}/?ref=${currentRefCode}`;
@@ -1654,7 +1560,6 @@
       else { alert(data.message); document.getElementById('inputNewPin').value = ''; updateDashboard(); }
     }
 
-    // Realistic Dynamic Activity Generator
     const sampleNames = [
       "Rahul S.", "Amit K.", "Priya M.", "Vikram R.", "Ankit P.", 
       "Neha G.", "Deepak T.", "Sunil V.", "Pooja B.", "Manish D.",
