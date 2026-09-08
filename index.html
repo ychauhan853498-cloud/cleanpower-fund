@@ -32,7 +32,7 @@
 
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .brand img { height: 32px; width: 32px; object-fit: contain; border-radius: 50%; }
+    .brand svg { height: 32px; width: 32px; border-radius: 50%; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
     .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
@@ -186,7 +186,11 @@
   <div id="authScreen" class="container">
     <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
       <h1 style="color: var(--accent); font-size: 24px; margin: 0; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <img src="logo.png" alt="Logo" style="height: 32px; width: 32px; object-fit: contain; border-radius: 50%;" /> CleanPower Global
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" style="height: 32px; width: 32px; border-radius: 50%;">
+          <circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/>
+          <path d="M180 140h70c45 0 80 30 80 75s-35 75-80 75h-30v90h-40V140zm40 110h30c22 0 40-12 40-35s-18-35-40-35h-30v70z" fill="#0ea5e9"/>
+          <path d="M210 200c50-70 140-50 170-10 20 28 20 70 0 98-40 55-130 45-170-10l30-20c25 35 80 35 105 0 15-20 15-50 0-70-20-25-70-30-95-5l-40-33z" fill="#10b981"/>
+        </svg> CleanPower Global
       </h1>
       <p style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">Institutional Clean-Energy Infrastructure Fund</p>
     </div>
@@ -236,7 +240,11 @@
   <div id="mainApp" style="display: none;">
     <header class="top-bar">
       <div class="brand">
-        <img src="logo.png" alt="CleanPower Logo" /> CleanPower Fund
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" style="height: 32px; width: 32px; border-radius: 50%;">
+          <circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/>
+          <path d="M180 140h70c45 0 80 30 80 75s-35 75-80 75h-30v90h-40V140zm40 110h30c22 0 40-12 40-35s-18-35-40-35h-30v70z" fill="#0ea5e9"/>
+          <path d="M210 200c50-70 140-50 170-10 20 28 20 70 0 98-40 55-130 45-170-10l30-20c25 35 80 35 105 0 15-20 15-50 0-70-20-25-70-30-95-5l-40-33z" fill="#10b981"/>
+        </svg> CleanPower Fund
       </div>
       <div class="top-actions">
         <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
@@ -1477,7 +1485,7 @@
         const degreesPerSegment = 360 / segments.length;
         const segmentCenterAngle = (data.segmentIndex * degreesPerSegment) + (degreesPerSegment / 2);
         const targetOffset = (270 - segmentCenterAngle + 360) % 360;
-        finalRotation = currentWheelAngle + (5 * 360) + (targetOffset - (currentWheelAngle % 360) + 360) % 360;
+        const finalRotation = currentWheelAngle + (5 * 360) + (targetOffset - (currentWheelAngle % 360) + 360) % 360;
         currentWheelAngle = finalRotation;
 
         canvas.style.transition = "transform 4s cubic-bezier(0.15, 0.9, 0.25, 1)";
