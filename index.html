@@ -32,7 +32,8 @@
 
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 15px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .brand img { height: 40px; width: auto; object-fit: contain; }
+    /* Logo size yahan badhakar 48px kar diya gaya hai */
+    .brand img { height: 48px; width: auto; object-fit: contain; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
     .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
@@ -188,7 +189,7 @@
       <div style="display: inline-flex; justify-content: center; align-items: center;">
         <img src="logo.png" alt="Logo" style="height: 65px; width: auto; object-fit: contain;" />
       </div>
-      <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Institutional Clean-Energy Infrastructure Fund</p>
+      <p style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">Institutional Clean-Energy Infrastructure Fund</p>
     </div>
 
     <div class="auth-box">
@@ -236,7 +237,7 @@
   <div id="mainApp" style="display: none;">
     <header class="top-bar">
       <div class="brand">
-        <img src="logo.png" alt="CleanPower Logo" style="height: 38px; width: auto; object-fit: contain;" />
+        <img src="logo.png" alt="CleanPower Logo" style="height: 48px; width: auto; object-fit: contain;" />
       </div>
       <div class="top-actions">
         <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
