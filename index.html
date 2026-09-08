@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>CleanPower Global Infrastructure Fund</title>
   
-  <!-- Browser Tab Favicon Integration -->
-  <link rel="icon" type="image/png" href="logo.png">
+  <!-- Inline SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'%3E%3Ccircle cx='250' cy='250' r='230' fill='none' stroke='%230ea5e9' stroke-width='25'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='220' font-weight='bold' fill='%2310b981' font-family='sans-serif'%3EC%3C/text%3E%3C/svg%3E">
 
   <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
 
@@ -32,7 +32,7 @@
 
     .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
     .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .brand img { height: 28px; width: 28px; object-fit: contain; border-radius: 50%; }
+    .brand svg { height: 30px; width: 30px; border-radius: 50%; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
     .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
@@ -186,7 +186,7 @@
   <div id="authScreen" class="container">
     <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
       <h1 style="color: var(--accent); font-size: 24px; margin: 0; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <img src="logo.png" alt="Logo" style="height: 32px; width: 32px; object-fit: contain; border-radius: 50%;" /> CleanPower Global
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" style="height:32px; width:32px; border-radius:50%;"><circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="220" font-weight="bold" fill="#10b981" font-family="sans-serif">C</text></svg> CleanPower Global
       </h1>
       <p style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">Institutional Clean-Energy Infrastructure Fund</p>
     </div>
@@ -236,7 +236,7 @@
   <div id="mainApp" style="display: none;">
     <header class="top-bar">
       <div class="brand">
-        <img src="logo.png" alt="CleanPower Logo" /> CleanPower Fund
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500"><circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="220" font-weight="bold" fill="#10b981" font-family="sans-serif">C</text></svg> CleanPower Fund
       </div>
       <div class="top-actions">
         <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
