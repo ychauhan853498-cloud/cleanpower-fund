@@ -846,6 +846,13 @@
       }
     }, 1000);
 
+    // Automatic 2-second polling refresh for user dashboard
+    setInterval(() => {
+      if (currentUserId) {
+        updateDashboard();
+      }
+    }, 2000);
+
     function openVipModal() { document.getElementById('vipModal').style.display = 'flex'; }
     function closeVipModal() { document.getElementById('vipModal').style.display = 'none'; }
 
