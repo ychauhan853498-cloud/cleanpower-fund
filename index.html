@@ -6,7 +6,7 @@
   <title>CleanPower Global Infrastructure Fund</title>
   
   <!-- Browser Tab Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500'%3E%3Ccircle cx='250' cy='250' r='230' fill='none' stroke='%230ea5e9' stroke-width='25'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='220' font-weight='bold' fill='%2310b981' font-family='sans-serif'%3EC%3C/text%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="logo.png">
 
   <meta name="google-site-verification" content="YnkkA6rnXaWkTtW_O5ALwCdvTHkjbludUX4BLu9skbI" />
 
@@ -30,9 +30,9 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
 
-    .top-bar { background: rgba(15, 23, 42, 0.9); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
-    .brand { font-size: 17px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .brand svg { height: 32px; width: 32px; border-radius: 50%; }
+    .top-bar { background: rgba(15, 23, 42, 0.9); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
+    .brand { font-size: 15px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .brand img { height: 36px; width: auto; object-fit: contain; }
     .top-actions { display: flex; gap: 6px; align-items: center; }
     .profile-btn { background: rgba(14, 165, 233, 0.1); color: var(--accent); border: 1px solid rgba(14, 165, 233, 0.3); padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
     .profile-btn:hover { background: rgba(14, 165, 233, 0.2); }
@@ -184,15 +184,12 @@
   </div>
 
   <div id="authScreen" class="container">
-    <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
-      <h1 style="color: var(--accent); font-size: 24px; margin: 0; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" style="height: 32px; width: 32px; border-radius: 50%;">
-          <circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/>
-          <path d="M180 140h70c45 0 80 30 80 75s-35 75-80 75h-30v90h-40V140zm40 110h30c22 0 40-12 40-35s-18-35-40-35h-30v70z" fill="#0ea5e9"/>
-          <path d="M210 200c50-70 140-50 170-10 20 28 20 70 0 98-40 55-130 45-170-10l30-20c25 35 80 35 105 0 15-20 15-50 0-70-20-25-70-30-95-5l-40-33z" fill="#10b981"/>
-        </svg> CleanPower Global
-      </h1>
-      <p style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">Institutional Clean-Energy Infrastructure Fund</p>
+    <div style="text-align: center; margin-top: 20px; margin-bottom: 10px;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px;">
+        <img src="logo.png" alt="CleanPower Logo" style="height: 48px; width: auto; object-fit: contain;" />
+        <h1 style="color: var(--accent); font-size: 22px; margin: 0; font-weight: 900;">CleanPower Global</h1>
+      </div>
+      <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">Institutional Clean-Energy Infrastructure Fund</p>
     </div>
 
     <div class="auth-box">
@@ -240,11 +237,7 @@
   <div id="mainApp" style="display: none;">
     <header class="top-bar">
       <div class="brand">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" style="height: 32px; width: 32px; border-radius: 50%;">
-          <circle cx="250" cy="250" r="230" fill="none" stroke="#0ea5e9" stroke-width="25"/>
-          <path d="M180 140h70c45 0 80 30 80 75s-35 75-80 75h-30v90h-40V140zm40 110h30c22 0 40-12 40-35s-18-35-40-35h-30v70z" fill="#0ea5e9"/>
-          <path d="M210 200c50-70 140-50 170-10 20 28 20 70 0 98-40 55-130 45-170-10l30-20c25 35 80 35 105 0 15-20 15-50 0-70-20-25-70-30-95-5l-40-33z" fill="#10b981"/>
-        </svg> CleanPower Fund
+        <img src="logo.png" alt="CleanPower Logo" /> CleanPower Fund
       </div>
       <div class="top-actions">
         <button class="profile-btn" onclick="openProfileModal()">👤 Profile</button>
