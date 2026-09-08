@@ -58,7 +58,7 @@ const Transaction = mongoose.model('Transaction', transactionSchema);
 const rechargeRequestSchema = new mongoose.Schema({
   user_id: mongoose.Schema.Types.ObjectId,
   amount: Number,
-  utr: { type: String, unique: true }, // Duplicate UTR prevention constraint
+  utr: { type: String, unique: true },
   time: String,
   status: { type: String, default: 'Pending' }
 });
@@ -169,7 +169,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
         await Notification.create({
           user_id: l1User._id,
           title: "Referral Bonus Credited 💰",
-          message: `Your recruit purchased a ₹${planCost} plan! ₹250 has been credited to your wallet.`,
+          message: `Your referral purchased a ₹${planCost} plan! ₹250 has been credited to your wallet.`,
           time: timeNow
         });
         notifyUserLive(l1User._id);
@@ -251,7 +251,7 @@ app.post('/api/verify-utr-deposit', async (req, res) => {
   try {
     const { userId, amount, utrNumber } = req.body;
     if (!userId || !amount || !utrNumber) {
-      return res.status(400).json({ error: "All fields are required." });
+      return res.status(400).json({ error: "All required fields must be filled." });
     }
 
     const utrRegex = /^\d{12}$/;
@@ -262,7 +262,7 @@ app.post('/api/verify-utr-deposit', async (req, res) => {
     // Check duplicate UTR in database
     const existingUtr = await RechargeRequest.findOne({ utr: utrNumber });
     if (existingUtr) {
-      return res.status(400).json({ error: "Yeh UTR number pehle hi use ho chuka hai! Duplicate transactions allow nahi hain." });
+      return res.status(400).json({ error: "This UTR number has already been used! Duplicate transactions are not permitted." });
     }
 
     const timeNow = new Date().toLocaleTimeString();
@@ -284,10 +284,10 @@ app.post('/api/verify-utr-deposit', async (req, res) => {
     });
 
     notifyUserLive(userId);
-    res.json({ message: "UTR successfully submitted! Admin verification ke baad amount credit ho jayega." });
+    res.json({ message: "UTR submitted successfully! Your funds will be credited after administrator verification." });
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(400).json({ error: "Yeh UTR number pehle hi submit ho chuka hai." });
+      return res.status(400).json({ error: "This UTR number has already been submitted." });
     }
     res.status(500).json({ error: err.message });
   }
@@ -296,7 +296,7 @@ app.post('/api/verify-utr-deposit', async (req, res) => {
 app.post('/api/send-email-otp', async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email || !email.includes('@')) return res.status(400).json({ error: "Invalid email address." });
+    if (!email || !email.includes('@')) return res.status(400).json({ error: "Please enter a valid email address." });
     
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     emailOtpStore[email] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
@@ -319,7 +319,7 @@ app.post('/api/send-email-otp', async (req, res) => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || "Failed to send email via Brevo");
 
-    res.json({ message: "OTP sent successfully to your email!" });
+    res.json({ message: "Verification code sent successfully to your email!" });
   } catch (err) {
     res.status(500).json({ error: "Failed to send email OTP: " + err.message });
   }
@@ -328,17 +328,17 @@ app.post('/api/send-email-otp', async (req, res) => {
 app.post('/api/register-with-email-otp', async (req, res) => {
   try {
     const { name, email, password, otp, refCode } = req.body;
-    if (!name || !email || !password || !otp) return res.status(400).json({ error: "All fields required." });
+    if (!name || !email || !password || !otp) return res.status(400).json({ error: "All fields are required." });
     
     if (!validatePassword(password)) {
       return res.status(400).json({ error: "Password must be at least 6 characters long, contain at least 1 capital letter, 1 number, and 1 special character." });
     }
 
     const stored = emailOtpStore[email];
-    if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid or expired OTP." });
+    if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid or expired verification code." });
 
     const existing = await User.findOne({ phone: email });
-    if (existing) return res.status(400).json({ error: "Email already registered." });
+    if (existing) return res.status(400).json({ error: "Email address is already registered." });
 
     delete emailOtpStore[email];
     const cleanRef = (refCode || '').trim();
@@ -367,7 +367,7 @@ app.post('/api/register-with-email-otp', async (req, res) => {
         notifyUserLive(inviter._id);
       }
     }
-    res.json({ message: "Registration successful. ₹50 credited.", userId: newUser._id });
+    res.json({ message: "Registration successful. ₹50 credited to your wallet.", userId: newUser._id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -381,7 +381,7 @@ app.post('/api/reset-password-email', async (req, res) => {
     }
 
     const stored = emailOtpStore[email];
-    if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid OTP." });
+    if (!stored || stored.otp !== otp.trim() || Date.now() > stored.expiresAt) return res.status(400).json({ error: "Invalid verification code." });
     
     await User.findOneAndUpdate({ phone: email }, { password: newPassword });
     delete emailOtpStore[email];
@@ -394,9 +394,9 @@ app.post('/api/reset-password-email', async (req, res) => {
 app.post('/api/set-txn-pin', async (req, res) => {
   try {
     const { userId, pin } = req.body;
-    if (!pin || pin.toString().length !== 6) return res.status(400).json({ error: "PIN must be 6 digits." });
+    if (!pin || pin.toString().length !== 6) return res.status(400).json({ error: "Security PIN must be exactly 6 digits." });
     await User.findByIdAndUpdate(userId, { txn_pin: pin.toString() });
-    res.json({ message: "PIN saved." });
+    res.json({ message: "Security PIN saved successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -405,14 +405,15 @@ app.post('/api/set-txn-pin', async (req, res) => {
 app.post('/api/login-email', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: "Email and password required." });
+    if (!email || !password) return res.status(400).json({ error: "Email and password are required." });
 
     const user = await User.findOne({ phone: email, password });
-    if (!user) return res.status(400).json({ error: "Invalid credentials." });
-    if (user.is_suspended) return res.status(403).json({ error: "Account suspended by administrator." });
+    if (!user) return res.status(400).json({ error: "Invalid credentials provided." });
+    if (user.is_suspended) return res.status(403).json({ error: "Account has been suspended by the administrator." });
     
     res.json({ message: "Login successful.", userId: user._id });
   } catch (err) {
+    console.error("Login Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -420,10 +421,10 @@ app.post('/api/login-email', async (req, res) => {
 app.post('/api/kyc/submit', async (req, res) => {
   try {
     const { userId, aadhaar, pan } = req.body;
-    if (!userId || !aadhaar || !pan) return res.status(400).json({ error: "All KYC fields required." });
+    if (!userId || !aadhaar || !pan) return res.status(400).json({ error: "All KYC fields are required." });
     await User.findByIdAndUpdate(userId, { aadhaar, pan, kyc_status: "Under Review" });
     notifyUserLive(userId);
-    res.json({ message: "KYC details submitted successfully. Verification under review." });
+    res.json({ message: "KYC documents submitted successfully. Verification is currently under review." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -433,7 +434,7 @@ app.get('/api/dashboard', async (req, res) => {
   try {
     const userId = req.query.userId;
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ error: "User not found." });
+    if (!user) return res.status(404).json({ error: "User account not found." });
 
     const plans = await UserPlan.find({ user_id: userId }).sort({ _id: -1 });
     const txns = await Transaction.find({ user_id: userId }).sort({ _id: -1 }).limit(15);
@@ -481,7 +482,7 @@ app.get('/api/dashboard', async (req, res) => {
 app.get('/api/notifications', async (req, res) => {
   try {
     const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "User ID required." });
+    if (!userId) return res.status(400).json({ error: "User ID is required." });
     const notes = await Notification.find({ user_id: userId }).sort({ _id: -1 }).limit(20);
     res.json({ success: true, notifications: notes });
   } catch (err) {
@@ -504,7 +505,7 @@ app.post('/api/complete-task', async (req, res) => {
     const { userId, taskId, reward } = req.body;
     const user = await User.findById(userId);
     let completed = (user.completed_tasks || '').split(',').filter(Boolean);
-    if (completed.includes(taskId.toString())) return res.status(400).json({ error: "Task already completed." });
+    if (completed.includes(taskId.toString())) return res.status(400).json({ error: "Task has already been completed." });
 
     completed.push(taskId.toString());
     const timeNow = new Date().toLocaleTimeString();
@@ -523,7 +524,7 @@ app.post('/api/complete-task', async (req, res) => {
 app.post('/api/support/ticket', async (req, res) => {
   try {
     const { userId, subject, message } = req.body;
-    if (!subject || !message) return res.status(400).json({ error: "Subject and message required." });
+    if (!subject || !message) return res.status(400).json({ error: "Subject and message are required." });
     const timeNow = new Date().toLocaleTimeString();
     await SupportTicket.create({ user_id: userId, subject, message, status: "Open", time: timeNow });
     notifyUserLive(userId);
@@ -538,7 +539,7 @@ app.post('/api/claim-daily', async (req, res) => {
     const { userId } = req.body;
     const user = await User.findById(userId);
     const today = new Date().toISOString().slice(0, 10);
-    if (!user || user.last_checkin === today) return res.status(400).json({ error: "Already claimed." });
+    if (!user || user.last_checkin === today) return res.status(400).json({ error: "Daily reward already claimed for today." });
 
     const timeNow = new Date().toLocaleTimeString();
     user.wallet_balance += 5;
@@ -548,7 +549,7 @@ app.post('/api/claim-daily', async (req, res) => {
 
     await Transaction.create({ user_id: userId, type: 'DAILY BONUS', amount: 5, time: timeNow, status: 'Settled' });
     notifyUserLive(userId);
-    res.json({ message: "₹5 credited." });
+    res.json({ message: "₹5 credited to your wallet." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -559,7 +560,7 @@ app.post('/api/spin-wheel', async (req, res) => {
     const { userId } = req.body;
     const user = await User.findById(userId);
     const today = new Date().toISOString().slice(0, 10);
-    if (user.last_spin === today) return res.status(400).json({ error: "Already spun today." });
+    if (user.last_spin === today) return res.status(400).json({ error: "Lucky spin already used today." });
 
     const segments = [{ label: "₹10", amount: 10 }, { label: "₹25", amount: 25 }, { label: "Try Again", amount: 0 }, { label: "₹50", amount: 50 }, { label: "₹5", amount: 5 }, { label: "₹100", amount: 100 }];
     const roll = Math.random() * 100;
@@ -585,7 +586,7 @@ app.post('/api/buy-plan', async (req, res) => {
   try {
     const { userId, planName, tier, cost, dailyReturn, durationDays } = req.body;
     const user = await User.findById(userId);
-    if (user.wallet_balance < cost) return res.status(400).json({ error: "Insufficient balance." });
+    if (user.wallet_balance < cost) return res.status(400).json({ error: "Insufficient wallet balance." });
 
     const timeNow = new Date().toLocaleTimeString();
     user.wallet_balance -= cost;
@@ -622,7 +623,7 @@ app.post('/api/withdraw', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: "User not found." });
     if (!user.txn_pin || user.txn_pin.length !== 6) return res.status(400).json({ error: "Please configure your 6-digit Security PIN first." });
-    if (!pin || pin.toString() !== user.txn_pin) return res.status(403).json({ error: "Incorrect 6-digit Security PIN." });
+    if (!pin || pin.toString() !== user.txn_pin) return res.status(403).json({ error: "Incorrect Security PIN." });
     if (!wAmt || wAmt < 200) return res.status(400).json({ error: "Minimum withdrawal amount is ₹200." });
     if (wAmt > user.wallet_balance) return res.status(400).json({ error: "Insufficient wallet balance." });
 
@@ -638,7 +639,7 @@ app.post('/api/withdraw', async (req, res) => {
     await Transaction.create({ user_id: userId, type: `WITHDRAWAL QUEUED`, amount: -wAmt, time: timeNow, status: 'Pending Approval' });
     notifyUserLive(userId);
 
-    res.json({ message: `Withdrawal submitted! Net ₹${netPayable} queued for payout (${feePct * 100}% fee).` });
+    res.json({ message: `Withdrawal request submitted! Net ₹${netPayable} queued for payout (${feePct * 100}% fee).` });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -648,7 +649,7 @@ app.post('/api/admin/login', (req, res) => {
   try {
     const { username, password } = req.body;
     if (username === 'admin' && password === 'admin@123') res.json({ success: true });
-    else res.status(401).json({ error: "Invalid credentials." });
+    else res.status(401).json({ error: "Invalid admin credentials." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -714,9 +715,9 @@ app.post('/api/admin/recharge-action', async (req, res) => {
       reqData.status = "Rejected";
       await reqData.save();
 
-      await Notification.create({ user_id: reqData.user_id, title: "Deposit Rejected ❌", message: `Your deposit request of ₹${reqData.amount} was rejected by admin.`, time: timeNow });
+      await Notification.create({ user_id: reqData.user_id, title: "Deposit Rejected ❌", message: `Your deposit request of ₹${reqData.amount} was rejected by administrator.`, time: timeNow });
       notifyUserLive(reqData.user_id);
-      res.json({ message: "Deposit rejected." });
+      res.json({ message: "Deposit request rejected." });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
