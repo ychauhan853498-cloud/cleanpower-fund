@@ -180,6 +180,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
   }
 }
 
+// Updated Daily Yield Accrual Cron Job with Statement Logging
 cron.schedule('0 0 * * *', async () => {
   try {
     await User.updateMany({}, { today_income: 0 });
@@ -206,7 +207,21 @@ cron.schedule('0 0 * * *', async () => {
         plan.days_remaining = updatedDays;
         await plan.save();
 
-        await Transaction.create({ user_id: user._id, type: `DAILY YIELD`, amount: boostedReturn, time: timeNow, status: 'Settled' });
+        await Transaction.create({ 
+          user_id: user._id, 
+          type: `DAILY YIELD (${plan.plan_name})`, 
+          amount: boostedReturn, 
+          time: timeNow, 
+          status: 'Settled' 
+        });
+
+        await Notification.create({
+          user_id: user._id,
+          title: "Daily Yield Credited ⚡",
+          message: `₹${boostedReturn} daily yield from ${plan.plan_name} has been added to your wallet.`,
+          time: timeNow
+        });
+
         notifyUserLive(user._id);
       } else {
         const totalSettlement = boostedReturn + plan.cost;
@@ -219,7 +234,14 @@ cron.schedule('0 0 * * *', async () => {
         plan.status = "Matured";
         await plan.save();
 
-        await Transaction.create({ user_id: user._id, type: `PRINCIPAL RELEASE (${plan.plan_name})`, amount: totalSettlement, time: timeNow, status: 'Matured & Settled' });
+        await Transaction.create({ 
+          user_id: user._id, 
+          type: `PRINCIPAL RELEASE (${plan.plan_name})`, 
+          amount: totalSettlement, 
+          time: timeNow, 
+          status: 'Matured & Settled' 
+        });
+
         await checkAndUpdateVipTier(user._id);
         notifyUserLive(user._id);
       }
@@ -259,7 +281,6 @@ app.post('/api/verify-utr-deposit', async (req, res) => {
       return res.status(400).json({ error: "Invalid UTR format. Must be exactly 12 digits." });
     }
 
-    // Check duplicate UTR in database
     const existingUtr = await RechargeRequest.findOne({ utr: utrNumber });
     if (existingUtr) {
       return res.status(400).json({ error: "This UTR number has already been used! Duplicate transactions are not permitted." });
