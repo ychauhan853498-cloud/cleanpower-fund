@@ -180,7 +180,7 @@ async function distributeMultiLevelCommission(buyerId, planCost) {
   }
 }
 
-// Updated Daily Yield Accrual Cron Job with Statement Logging
+// Daily Yield Accrual Cron Job
 cron.schedule('0 0 * * *', async () => {
   try {
     await User.updateMany({}, { today_income: 0 });
@@ -666,6 +666,8 @@ app.post('/api/withdraw', async (req, res) => {
   }
 });
 
+// ==================== ADMIN ENDPOINTS ====================
+
 app.post('/api/admin/login', (req, res) => {
   try {
     const { username, password } = req.body;
@@ -740,6 +742,152 @@ app.post('/api/admin/recharge-action', async (req, res) => {
       notifyUserLive(reqData.user_id);
       res.json({ message: "Deposit request rejected." });
     }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/withdrawal-action', async (req, res) => {
+  try {
+    const { requestId, action } = req.body;
+    const wReq = await WithdrawalRequest.findById(requestId);
+    if (!wReq) return res.status(404).json({ error: "Withdrawal request not found." });
+
+    const timeNow = new Date().toLocaleTimeString();
+    const user = await User.findById(wReq.user_id);
+
+    if (action === 'approve') {
+      wReq.status = "Settled";
+      await wReq.save();
+
+      await Transaction.create({ user_id: wReq.user_id, type: `WITHDRAWAL SETTLED`, amount: -wReq.net_amount, time: timeNow, status: 'Completed' });
+      await Notification.create({ user_id: wReq.user_id, title: "Withdrawal Successful 🏦", message: `Your withdrawal of ₹${wReq.net_amount} has been successfully settled.`, time: timeNow });
+
+      notifyUserLive(wReq.user_id);
+      res.json({ message: "Withdrawal approved and marked as settled." });
+    } else {
+      wReq.status = "Rejected";
+      await wReq.save();
+
+      if (user) {
+        user.wallet_balance += wReq.gross_amount;
+        await user.save();
+      }
+
+      await Transaction.create({ user_id: wReq.user_id, type: `WITHDRAWAL REFUNDED`, amount: wReq.gross_amount, time: timeNow, status: 'Refunded' });
+      await Notification.create({ user_id: wReq.user_id, title: "Withdrawal Rejected ❌", message: `Your withdrawal request was rejected and ₹${wReq.gross_amount} has been refunded.`, time: timeNow });
+
+      notifyUserLive(wReq.user_id);
+      res.json({ message: "Withdrawal rejected and amount refunded." });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/kyc-action', async (req, res) => {
+  try {
+    const { userId, action } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found." });
+
+    const timeNow = new Date().toLocaleTimeString();
+    if (action === 'verify') {
+      user.kyc_status = 'Verified';
+      await user.save();
+      await Notification.create({ user_id: userId, title: "KYC Verified ✓", message: "Your KYC has been verified by admin.", time: timeNow });
+    } else {
+      user.kyc_status = 'Rejected';
+      await user.save();
+      await Notification.create({ user_id: userId, title: "KYC Rejected ❌", message: "Your KYC verification was rejected.", time: timeNow });
+    }
+
+    notifyUserLive(userId);
+    res.json({ message: `KYC status updated to ${user.kyc_status}.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/user-suspend', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found." });
+
+    user.is_suspended = user.is_suspended ? 0 : 1;
+    await user.save();
+
+    notifyUserLive(userId);
+    res.json({ message: "User status updated successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/user-delete', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    await User.findByIdAndDelete(userId);
+    await UserPlan.deleteMany({ user_id: userId });
+    await Transaction.deleteMany({ user_id: userId });
+    res.json({ message: "User account deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/adjust-balance', async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found." });
+
+    const adjAmount = Number(amount);
+    user.wallet_balance += adjAmount;
+    await user.save();
+
+    const timeNow = new Date().toLocaleTimeString();
+    await Transaction.create({ user_id: userId, type: `ADMIN BALANCE ADJUSTMENT`, amount: adjAmount, time: timeNow, status: 'Settled' });
+    
+    notifyUserLive(userId);
+    res.json({ message: `Wallet balance adjusted by ₹${adjAmount}.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/announcement', async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: "Announcement message cannot be empty." });
+
+    const timeNow = new Date().toLocaleTimeString();
+    const allUsers = await User.find({});
+    
+    for (const u of allUsers) {
+      await Notification.create({
+        user_id: u._id,
+        title: "Platform Announcement 📢",
+        message: message,
+        time: timeNow
+      });
+      notifyUserLive(u._id);
+    }
+
+    res.json({ message: "Announcement broadcasted successfully." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/create-plan', async (req, res) => {
+  try {
+    const { plan_name, tier, cost, daily_return, duration_days } = req.body;
+    if (!plan_name || !cost || !daily_return) return res.status(400).json({ error: "Required fields missing." });
+
+    await CustomPlan.create({ plan_name, tier: tier || 'VIP1', cost: Number(cost), daily_return: Number(daily_return), duration_days: Number(duration_days || 45) });
+    res.json({ message: "New investment plan created successfully." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
