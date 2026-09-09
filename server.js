@@ -268,7 +268,6 @@ app.get('/api/live-stream', (req, res) => {
   req.on('close', () => sseClients.delete(userId));
 });
 
-// UTR Deposit Verification Route with Duplicate Check
 app.post('/api/verify-utr-deposit', async (req, res) => {
   try {
     const { userId, amount, utrNumber } = req.body;
