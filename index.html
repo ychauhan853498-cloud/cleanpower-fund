@@ -25,7 +25,7 @@
 
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg-primary); color: var(--text-main); margin: 0; padding: 0 0 90px 0; overflow-x: hidden; }
-    .container { max-width: 480px; margin: 0 auto; padding: 16px; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .container { max-width: 480px; margin: 0 auto; padding: 16px; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
@@ -175,6 +175,24 @@
     .wheel-container { position: relative; width: 260px; height: 260px; margin: 14px auto; }
     .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 16px solid var(--accent-yellow); z-index: 10; }
     .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: var(--bg-primary); border: 2px solid var(--accent-yellow); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: var(--accent-yellow); z-index: 5; }
+
+    /* Smooth Slide Animation Styles */
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      touch-action: pan-y; /* Allows smooth vertical scrolling while capturing horizontal swipes */
+    }
+    .slide-track {
+      display: flex;
+      width: 600%; /* 6 tabs total */
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .slide-pane {
+      width: 16.6666%;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -251,291 +269,317 @@
       </div>
     </div>
 
-    <div class="container">
-      <div id="tabHome">
-        <div class="stats-grid">
-          <div class="stat-box"><span>Platform AUM</span><b id="statAum">₹1.42 Cr+</b></div>
-          <div class="stat-box"><span>Total Payouts</span><b id="statPayouts">₹89.2 Lakhs</b></div>
-        </div>
+    <!-- Swipeable Container Wrapper -->
+    <div class="slide-wrapper" id="slideWrapper">
+      <div class="slide-track" id="slideTrack">
 
-        <div class="analytics-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:800;">
-            <span>📈 Portfolio Allocation & Breakdown</span>
-            <span style="font-size:11px; color:var(--accent);">Live Energy Fund</span>
-          </div>
-          <div class="allocation-bar">
-            <div class="alloc-solar" id="barSolar" title="Solar Array" style="width: 60%;"></div>
-            <div class="alloc-wind" id="barWind" title="Microgrid Wind" style="width: 25%;"></div>
-            <div class="alloc-hydro" id="barHydro" title="Hydro Facility" style="width: 15%;"></div>
-          </div>
-          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted);">
-            <span>☀️ Solar (<span id="pctSolar">60</span>%)</span>
-            <span>💨 Wind (<span id="pctWind">25</span>%)</span>
-            <span>💧 Hydro (<span id="pctHydro">15</span>%)</span>
-          </div>
-
-          <div class="portfolio-breakdown-grid">
-            <div class="portfolio-stat-card"><span>Solar Capital</span><b id="amtSolar">₹0</b></div>
-            <div class="portfolio-stat-card"><span>Wind Capital</span><b id="amtWind">₹0</b></div>
-            <div class="portfolio-stat-card"><span>Hydro Capital</span><b id="amtHydro">₹0</b></div>
-          </div>
-        </div>
-
-        <div class="clock-card">
-          <div>
-            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:800;">Next Settlement Cycle</div>
-            <div style="font-size:11px; color:var(--text-main); margin-top:3px; font-weight:600;">Midnight Yield Accrual</div>
-          </div>
-          <div class="clock-time" id="countdownClock">05:12:40</div>
-        </div>
-
-        <div class="wallet-card">
-          <div class="wallet-top">
-            <span style="font-size: 12px; opacity: 0.9; font-weight: 600;" id="dispUserName">Institutional Account</span>
-            <span class="vip-pill" id="dispVip" onclick="openVipModal()">Tier VIP 1 ⓘ</span>
-          </div>
-          <div class="wallet-balance" id="dispBalance">₹0.00</div>
-          
-          <div class="vip-progress-box">
-            <div style="display:flex; justify-content:space-between;">
-              <span id="vipProgressLabel">VIP Tier Progress (0% to VIP 2)</span>
-              <span id="vipProgressAmount">₹0 / ₹2,500</span>
+        <!-- TAB 1: HOME / INVEST -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="stats-grid">
+              <div class="stat-box"><span>Platform AUM</span><b id="statAum">₹1.42 Cr+</b></div>
+              <div class="stat-box"><span>Total Payouts</span><b id="statPayouts">₹89.2 Lakhs</b></div>
             </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="vipProgressBarFill"></div>
+
+            <div class="analytics-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:800;">
+                <span>📈 Portfolio Allocation & Breakdown</span>
+                <span style="font-size:11px; color:var(--accent);">Live Energy Fund</span>
+              </div>
+              <div class="allocation-bar">
+                <div class="alloc-solar" id="barSolar" title="Solar Array" style="width: 60%;"></div>
+                <div class="alloc-wind" id="barWind" title="Microgrid Wind" style="width: 25%;"></div>
+                <div class="alloc-hydro" id="barHydro" title="Hydro Facility" style="width: 15%;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted);">
+                <span>☀️ Solar (<span id="pctSolar">60</span>%)</span>
+                <span>💨 Wind (<span id="pctWind">25</span>%)</span>
+                <span>💧 Hydro (<span id="pctHydro">15</span>%)</span>
+              </div>
+
+              <div class="portfolio-breakdown-grid">
+                <div class="portfolio-stat-card"><span>Solar Capital</span><b id="amtSolar">₹0</b></div>
+                <div class="portfolio-stat-card"><span>Wind Capital</span><b id="amtWind">₹0</b></div>
+                <div class="portfolio-stat-card"><span>Hydro Capital</span><b id="amtHydro">₹0</b></div>
+              </div>
+            </div>
+
+            <div class="clock-card">
+              <div>
+                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:800;">Next Settlement Cycle</div>
+                <div style="font-size:11px; color:var(--text-main); margin-top:3px; font-weight:600;">Midnight Yield Accrual</div>
+              </div>
+              <div class="clock-time" id="countdownClock">05:12:40</div>
+            </div>
+
+            <div class="wallet-card">
+              <div class="wallet-top">
+                <span style="font-size: 12px; opacity: 0.9; font-weight: 600;" id="dispUserName">Institutional Account</span>
+                <span class="vip-pill" id="dispVip" onclick="openVipModal()">Tier VIP 1 ⓘ</span>
+              </div>
+              <div class="wallet-balance" id="dispBalance">₹0.00</div>
+              
+              <div class="vip-progress-box">
+                <div style="display:flex; justify-content:space-between;">
+                  <span id="vipProgressLabel">VIP Tier Progress (0% to VIP 2)</span>
+                  <span id="vipProgressAmount">₹0 / ₹2,500</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="vipProgressBarFill"></div>
+                </div>
+              </div>
+
+              <div class="wallet-stats">
+                <div>Active Capital<span id="dispInvested">₹0</span></div>
+                <div>Today's Accrued Yield<span class="green" id="dispTodayIncome">₹0</span></div>
+              </div>
+
+              <div class="wallet-btns">
+                <div class="btn-w" onclick="openModal('deposit')">⚡ Deposit</div>
+                <div class="btn-w" onclick="openModal('withdraw')">🏦 Withdraw</div>
+              </div>
+            </div>
+
+            <div class="checkin-card">
+              <div>
+                <b style="color:var(--accent-yellow); font-size: 13px;">🎁 Daily Yield Attendance</b>
+                <div style="font-size:11px; color:var(--text-muted); margin-top: 2px;">Claim ₹5 daily check-in settlement</div>
+              </div>
+              <button class="btn-checkin" id="chkBtn" onclick="claimDailyReward()">Claim ₹5</button>
+            </div>
+
+            <div class="section-header">Commercial Clean-Energy Subscriptions (6 Tiers)</div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">Photovoltaic Generation Array 1kW</div>
+                <span class="plan-badge badge-v1">VIP 1 Starter</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹500</b></div>
+                <div>Daily Yield<b class="green">₹35/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('Photovoltaic Generation Array 1kW', 'VIP1', 500, 35, 45)">Subscribe ₹500</button>
+            </div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">Commercial Rooftop Microgrid 5kW</div>
+                <span class="plan-badge badge-v2">VIP 2 Enterprise</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹2,500</b></div>
+                <div>Daily Yield<b class="green">₹200/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('Commercial Rooftop Microgrid 5kW', 'VIP2', 2500, 200, 45)">Subscribe ₹2,500</button>
+            </div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">Mega-Scale Clean Energy Facility 20kW</div>
+                <span class="plan-badge badge-v3">VIP 3 Institutional</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹10,000</b></div>
+                <div>Daily Yield<b class="green">₹900/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('Mega-Scale Clean Energy Facility 20kW', 'VIP3', 10000, 900, 45)">Subscribe ₹10,000</button>
+            </div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">High-Efficiency Wind Turbine Farm 50kW</div>
+                <span class="plan-badge badge-v4">VIP 4 Advanced</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹25,000</b></div>
+                <div>Daily Yield<b class="green">₹2,450/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('High-Efficiency Wind Turbine Farm 50kW', 'VIP4', 25000, 2450, 45)">Subscribe ₹25,000</button>
+            </div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">Utility-Scale Solar Park Grid 100kW</div>
+                <span class="plan-badge badge-v4">VIP 4 Utility</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹35,000</b></div>
+                <div>Daily Yield<b class="green">₹3,600/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('Utility-Scale Solar Park Grid 100kW', 'VIP4', 35000, 3600, 45)">Subscribe ₹35,000</button>
+            </div>
+
+            <div class="plan-card">
+              <div class="plan-header-row">
+                <div class="plan-title">Offshore Hybrid Green Energy Plant 250kW</div>
+                <span class="plan-badge badge-v4">VIP 4 Flagship</span>
+              </div>
+              <div class="plan-grid">
+                <div>Capital<b>₹50,000</b></div>
+                <div>Daily Yield<b class="green">₹5,400/day</b></div>
+                <div>Cycle<b>45 Days</b></div>
+              </div>
+              <button class="btn-invest" onclick="investPlan('Offshore Hybrid Green Energy Plant 250kW', 'VIP4', 50000, 5400, 45)">Subscribe ₹50,000</button>
             </div>
           </div>
+        </div>
 
-          <div class="wallet-stats">
-            <div>Active Capital<span id="dispInvested">₹0</span></div>
-            <div>Today's Accrued Yield<span class="green" id="dispTodayIncome">₹0</span></div>
-          </div>
+        <!-- TAB 2: TASKS -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="section-header">Daily Task Center</div>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:14px;">Complete promotional tasks to claim instant cash rewards directly to your wallet.</p>
 
-          <div class="wallet-btns">
-            <div class="btn-w" onclick="openModal('deposit')">⚡ Deposit</div>
-            <div class="btn-w" onclick="openModal('withdraw')">🏦 Withdraw</div>
+            <div class="task-card">
+              <div>
+                <b style="font-size:13px; color:var(--text-main);">Share Platform Link</b>
+                <div style="font-size:11px; color:var(--text-muted);">Share referral link on WhatsApp status (+₹20)</div>
+              </div>
+              <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask1" onclick="completeDailyTask(1, 20)">Claim ₹20</button>
+            </div>
+
+            <div class="task-card">
+              <div>
+                <b style="font-size:13px; color:var(--text-main);">Join Telegram Community</b>
+                <div style="font-size:11px; color:var(--text-muted);">Join official group and stay updated (+₹15)</div>
+              </div>
+              <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask2" onclick="completeDailyTask(2, 15)">Claim ₹15</button>
+            </div>
+
+            <div class="spin-section-card">
+              <div class="section-header" style="margin: 0 0 4px 0;">🎡 Daily Lucky Spin & Win</div>
+              <p style="font-size:11px; color:var(--text-muted); margin: 0 0 10px 0;">1 Free Spin every 24 hours. Instant wallet credit.</p>
+
+              <div class="wheel-container">
+                <div class="wheel-pointer"></div>
+                <canvas id="wheelCanvas" width="260" height="260"></canvas>
+                <div class="wheel-center">SPIN</div>
+              </div>
+
+              <button class="btn-main" id="spinActionBtn" style="background:var(--accent-yellow); color:#000; font-weight:900; margin-top:8px;" onclick="executeWheelSpin()">
+                Spin Now (Free)
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="checkin-card">
-          <div>
-            <b style="color:var(--accent-yellow); font-size: 13px;">🎁 Daily Yield Attendance</b>
-            <div style="font-size:11px; color:var(--text-muted); margin-top: 2px;">Claim ₹5 daily check-in settlement</div>
+        <!-- TAB 3: ASSETS -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="section-header">Active Generating Assets & Maturity Tracking</div>
+            <div id="activePlantsArea">No active facilities found.</div>
+
+            <div class="section-header">Institutional Settlement Ledger & Timeline</div>
+            <div class="table-box">
+              <table>
+                <thead>
+                  <tr><th>Description</th><th>Volume</th><th>State</th></tr>
+                </thead>
+                <tbody id="txnTableBody"></tbody>
+              </table>
+            </div>
           </div>
-          <button class="btn-checkin" id="chkBtn" onclick="claimDailyReward()">Claim ₹5</button>
         </div>
 
-        <div class="section-header">Commercial Clean-Energy Subscriptions (6 Tiers)</div>
+        <!-- TAB 4: TEAM -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="team-banner">
+              <div style="font-size: 12px; opacity: 0.9; font-weight: 600;">🚀 Affiliate Invitation & Rewards Matrix</div>
+              <div class="wallet-balance" id="myRefCode" style="font-size: 24px; margin: 8px 0 6px 0; letter-spacing: 1px;">SLR1000</div>
+              <p style="font-size: 11px; opacity: 0.85; margin: 0 0 16px 0; line-height: 1.4;">
+                Earn <b style="color: #facc15;">₹250 instant cash reward</b> in your wallet when your invited recruit activates any plan worth <b>₹500 or more</b>!
+              </p>
+              <div style="display: flex; gap: 10px;">
+                <button class="share-action-btn" style="flex:1;" onclick="copyReferralLink()">📋 Copy Link</button>
+                <button class="share-action-btn" style="flex:1;" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
+              </div>
+            </div>
 
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">Photovoltaic Generation Array 1kW</div>
-            <span class="plan-badge badge-v1">VIP 1 Starter</span>
+            <div class="section-header">Your 3-Tier Network Matrix</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+              <div class="team-stat-card">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 1</span>
+                <b id="teamL1Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+                <small style="font-size: 9px; color: var(--accent-green); font-weight: 700;">₹250 / ₹500+ Plan</small>
+              </div>
+              <div class="team-stat-card">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 2</span>
+                <b id="teamL2Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+                <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Sub-Network</small>
+              </div>
+              <div class="team-stat-card">
+                <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 3</span>
+                <b id="teamL3Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
+                <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Global Sub</small>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+              <b style="color: var(--text-main); display: block; margin-bottom: 6px; font-size: 12px;">💡 Team Earning Guidelines:</b>
+              1. Share your unique link or code with your friends.<br>
+              2. When your invited friend subscribes to any clean-energy plan of <b>₹500 or more</b>, <b>₹250</b> is automatically credited to your wallet.<br>
+              3. If they purchase below ₹500 or make no investment, no referral reward is issued.
+            </div>
           </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹500</b></div>
-            <div>Daily Yield<b class="green">₹35/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('Photovoltaic Generation Array 1kW', 'VIP1', 500, 35, 45)">Subscribe ₹500</button>
         </div>
 
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">Commercial Rooftop Microgrid 5kW</div>
-            <span class="plan-badge badge-v2">VIP 2 Enterprise</span>
+        <!-- TAB 5: NOTIFICATIONS / ALERTS -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="section-header">System Notifications & Alerts</div>
+            <div id="notificationsArea">
+              <div style="text-align:center; padding:20px; background:var(--bg-card); border-radius:14px; color:var(--text-muted); font-weight: 600; font-size:12px;">No notifications found.</div>
+            </div>
           </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹2,500</b></div>
-            <div>Daily Yield<b class="green">₹200/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('Commercial Rooftop Microgrid 5kW', 'VIP2', 2500, 200, 45)">Subscribe ₹2,500</button>
         </div>
 
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">Mega-Scale Clean Energy Facility 20kW</div>
-            <span class="plan-badge badge-v3">VIP 3 Institutional</span>
+        <!-- TAB 6: SUPPORT -->
+        <div class="slide-pane">
+          <div class="container">
+            <div class="section-header">Financial Security (Withdrawal PIN)</div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:16px;">
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; font-weight: 600;">
+                Security Status: <b id="pinStatusText" style="color:var(--accent-yellow);">Not Configured</b>
+              </div>
+              <input type="password" id="inputNewPin" maxlength="6" placeholder="Enter 6-Digit Numeric Security PIN" />
+              <button class="btn-main" onclick="configureSecurityPin()">Save 6-Digit PIN</button>
+            </div>
+
+            <div class="section-header">AI Help & Support Assistant</div>
+            <div class="chatbot-container">
+              <div class="chatbot-messages" id="chatMessages">
+                <div class="chat-bubble bot">Hello! I am your CleanPower AI Assistant. How can I help you with deposits, withdrawals, or investments today?</div>
+              </div>
+              <div class="chatbot-input-row">
+                <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="handleChatKeyPress(event)" />
+                <button class="chatbot-send-btn" onclick="sendChatMessage()">Send</button>
+              </div>
+            </div>
+
+            <div class="section-header" style="margin-top:20px;">Submit Support Ticket</div>
+            <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:16px;">
+              <input type="text" id="ticketSubject" placeholder="Issue Subject" />
+              <textarea id="ticketMessage" rows="3" placeholder="Describe your query..." style="width:100%; padding:14px; background:#070d1d; border:1px solid var(--border); color:white; border-radius:12px; font-size:14px; outline:none; resize:none;"></textarea>
+              <button class="btn-main" style="margin-top:10px;" onclick="submitSupportTicket()">Submit Support Ticket</button>
+            </div>
+
+            <div class="section-header">My Support Tickets</div>
+            <div id="supportTicketsArea" style="font-size:12px; color:var(--text-muted);">No active tickets.</div>
           </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹10,000</b></div>
-            <div>Daily Yield<b class="green">₹900/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('Mega-Scale Clean Energy Facility 20kW', 'VIP3', 10000, 900, 45)">Subscribe ₹10,000</button>
         </div>
 
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">High-Efficiency Wind Turbine Farm 50kW</div>
-            <span class="plan-badge badge-v4">VIP 4 Advanced</span>
-          </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹25,000</b></div>
-            <div>Daily Yield<b class="green">₹2,450/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('High-Efficiency Wind Turbine Farm 50kW', 'VIP4', 25000, 2450, 45)">Subscribe ₹25,000</button>
-        </div>
-
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">Utility-Scale Solar Park Grid 100kW</div>
-            <span class="plan-badge badge-v4">VIP 4 Utility</span>
-          </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹35,000</b></div>
-            <div>Daily Yield<b class="green">₹3,600/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('Utility-Scale Solar Park Grid 100kW', 'VIP4', 35000, 3600, 45)">Subscribe ₹35,000</button>
-        </div>
-
-        <div class="plan-card">
-          <div class="plan-header-row">
-            <div class="plan-title">Offshore Hybrid Green Energy Plant 250kW</div>
-            <span class="plan-badge badge-v4">VIP 4 Flagship</span>
-          </div>
-          <div class="plan-grid">
-            <div>Capital<b>₹50,000</b></div>
-            <div>Daily Yield<b class="green">₹5,400/day</b></div>
-            <div>Cycle<b>45 Days</b></div>
-          </div>
-          <button class="btn-invest" onclick="investPlan('Offshore Hybrid Green Energy Plant 250kW', 'VIP4', 50000, 5400, 45)">Subscribe ₹50,000</button>
-        </div>
       </div>
+    </div>
 
-      <div id="tabTasks" style="display: none;">
-        <div class="section-header">Daily Task Center</div>
-        <p style="font-size:11px; color:var(--text-muted); margin-bottom:14px;">Complete promotional tasks to claim instant cash rewards directly to your wallet.</p>
-
-        <div class="task-card">
-          <div>
-            <b style="font-size:13px; color:var(--text-main);">Share Platform Link</b>
-            <div style="font-size:11px; color:var(--text-muted);">Share referral link on WhatsApp status (+₹20)</div>
-          </div>
-          <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask1" onclick="completeDailyTask(1, 20)">Claim ₹20</button>
-        </div>
-
-        <div class="task-card">
-          <div>
-            <b style="font-size:13px; color:var(--text-main);">Join Telegram Community</b>
-            <div style="font-size:11px; color:var(--text-muted);">Join official group and stay updated (+₹15)</div>
-          </div>
-          <button class="btn-invest" style="width:auto; padding:8px 14px;" id="btnTask2" onclick="completeDailyTask(2, 15)">Claim ₹15</button>
-        </div>
-
-        <div class="spin-section-card">
-          <div class="section-header" style="margin: 0 0 4px 0;">🎡 Daily Lucky Spin & Win</div>
-          <p style="font-size:11px; color:var(--text-muted); margin: 0 0 10px 0;">1 Free Spin every 24 hours. Instant wallet credit.</p>
-
-          <div class="wheel-container">
-            <div class="wheel-pointer"></div>
-            <canvas id="wheelCanvas" width="260" height="260"></canvas>
-            <div class="wheel-center">SPIN</div>
-          </div>
-
-          <button class="btn-main" id="spinActionBtn" style="background:var(--accent-yellow); color:#000; font-weight:900; margin-top:8px;" onclick="executeWheelSpin()">
-            Spin Now (Free)
-          </button>
-        </div>
-      </div>
-
-      <div id="tabAssets" style="display: none;">
-        <div class="section-header">Active Generating Assets & Maturity Tracking</div>
-        <div id="activePlantsArea">No active facilities found.</div>
-
-        <div class="section-header">Institutional Settlement Ledger & Timeline</div>
-        <div class="table-box">
-          <table>
-            <thead>
-              <tr><th>Description</th><th>Volume</th><th>State</th></tr>
-            </thead>
-            <tbody id="txnTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tabTeam" style="display: none;">
-        <div class="team-banner">
-          <div style="font-size: 12px; opacity: 0.9; font-weight: 600;">🚀 Affiliate Invitation & Rewards Matrix</div>
-          <div class="wallet-balance" id="myRefCode" style="font-size: 24px; margin: 8px 0 6px 0; letter-spacing: 1px;">SLR1000</div>
-          <p style="font-size: 11px; opacity: 0.85; margin: 0 0 16px 0; line-height: 1.4;">
-            Earn <b style="color: #facc15;">₹250 instant cash reward</b> in your wallet when your invited recruit activates any plan worth <b>₹500 or more</b>!
-          </p>
-          <div style="display: flex; gap: 10px;">
-            <button class="share-action-btn" style="flex:1;" onclick="copyReferralLink()">📋 Copy Link</button>
-            <button class="share-action-btn" style="flex:1;" onclick="shareViaWhatsApp()">💬 WhatsApp</button>
-          </div>
-        </div>
-
-        <div class="section-header">Your 3-Tier Network Matrix</div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
-          <div class="team-stat-card">
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 1</span>
-            <b id="teamL1Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
-            <small style="font-size: 9px; color: var(--accent-green); font-weight: 700;">₹250 / ₹500+ Plan</small>
-          </div>
-          <div class="team-stat-card">
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 2</span>
-            <b id="teamL2Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
-            <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Sub-Network</small>
-          </div>
-          <div class="team-stat-card">
-            <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Tier 3</span>
-            <b id="teamL3Count" style="display: block; font-size: 18px; color: var(--accent); margin-top: 6px; font-weight: 900;">0</b>
-            <small style="font-size: 9px; color: var(--text-muted); font-weight: 700;">Global Sub</small>
-          </div>
-        </div>
-
-        <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
-          <b style="color: var(--text-main); display: block; margin-bottom: 6px; font-size: 12px;">💡 Team Earning Guidelines:</b>
-          1. Share your unique link or code with your friends.<br>
-          2. When your invited friend subscribes to any clean-energy plan of <b>₹500 or more</b>, <b>₹250</b> is automatically credited to your wallet.<br>
-          3. If they purchase below ₹500 or make no investment, no referral reward is issued.
-        </div>
-      </div>
-
-      <div id="tabNotifications" style="display: none;">
-        <div class="section-header">System Notifications & Alerts</div>
-        <div id="notificationsArea">
-          <div style="text-align:center; padding:20px; background:var(--bg-card); border-radius:14px; color:var(--text-muted); font-weight: 600; font-size:12px;">No notifications found.</div>
-        </div>
-      </div>
-
-      <div id="tabSupport" style="display: none;">
-        <div class="section-header">Financial Security (Withdrawal PIN)</div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:16px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px; font-weight: 600;">
-            Security Status: <b id="pinStatusText" style="color:var(--accent-yellow);">Not Configured</b>
-          </div>
-          <input type="password" id="inputNewPin" maxlength="6" placeholder="Enter 6-Digit Numeric Security PIN" />
-          <button class="btn-main" onclick="configureSecurityPin()">Save 6-Digit PIN</button>
-        </div>
-
-        <div class="section-header">AI Help & Support Assistant</div>
-        <div class="chatbot-container">
-          <div class="chatbot-messages" id="chatMessages">
-            <div class="chat-bubble bot">Hello! I am your CleanPower AI Assistant. How can I help you with deposits, withdrawals, or investments today?</div>
-          </div>
-          <div class="chatbot-input-row">
-            <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="handleChatKeyPress(event)" />
-            <button class="chatbot-send-btn" onclick="sendChatMessage()">Send</button>
-          </div>
-        </div>
-
-        <div class="section-header" style="margin-top:20px;">Submit Support Ticket</div>
-        <div style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:16px;">
-          <input type="text" id="ticketSubject" placeholder="Issue Subject" />
-          <textarea id="ticketMessage" rows="3" placeholder="Describe your query..." style="width:100%; padding:14px; background:#070d1d; border:1px solid var(--border); color:white; border-radius:12px; font-size:14px; outline:none; resize:none;"></textarea>
-          <button class="btn-main" style="margin-top:10px;" onclick="submitSupportTicket()">Submit Support Ticket</button>
-        </div>
-
-        <div class="section-header">My Support Tickets</div>
-        <div id="supportTicketsArea" style="font-size:12px; color:var(--text-muted);">No active tickets.</div>
-      </div>
-
+    <!-- Modals & Popups -->
+    <div class="container" style="padding:0;">
       <div id="profileModal" class="custom-modal">
         <div class="custom-modal-content">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -603,7 +647,6 @@
         </div>
       </div>
 
-      <!-- Action Modal with UTR Deposit System, 100% Reliable SVG QR Code & Copy UPI ID -->
       <div id="actionModal" class="custom-modal">
         <div class="custom-modal-content">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -615,7 +658,6 @@
             <div id="depositTimerBox" style="background:#ffebee; color:#c62828; padding:8px; border-radius:6px; font-weight:bold; font-size:15px; margin-bottom:15px;">Time Remaining: 10:00</div>
             
             <div style="background:#0f172a; padding:12px; border: 1px solid var(--border); border-radius:14px; display:inline-block; margin-bottom:14px; width: 100%; box-sizing: border-box;">
-              <!-- 100% Reliable SVG Vector QR Code Rendering -->
               <div style="width:160px; height:160px; margin:0 auto 10px; background:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding: 6px;">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=powerfund@axl&pn=PowerFund" alt="Power Fund Scan & Pay" style="width: 100%; height: 100%; object-fit: contain;" />
               </div>
@@ -624,7 +666,6 @@
                 <span>UPI ID: <b id="upiIdText" style="color: var(--accent);">powerfund@axl</b></span>
               </div>
               
-              <!-- Copy UPI ID Button -->
               <button type="button" onclick="copyUpiId()" style="background:#0284c7; color:white; border:none; padding:10px 14px; border-radius:10px; font-size:12px; font-weight:bold; cursor:pointer; width: 100%;">
                 📋 Copy UPI ID
               </button>
@@ -655,16 +696,15 @@
           <div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;" id="toastTime">Just now</div>
         </div>
       </div>
-
     </div>
 
     <nav class="bottom-bar">
-      <button class="nav-btn active" id="nbHome" onclick="switchNav('home')"><span>⚡</span><span>Invest</span></button>
-      <button class="nav-btn" id="nbTasks" onclick="switchNav('tasks')"><span>🎯</span><span>Tasks</span></button>
-      <button class="nav-btn" id="nbAssets" onclick="switchNav('assets')"><span>📊</span><span>Assets</span></button>
-      <button class="nav-btn" id="nbTeam" onclick="switchNav('team')"><span>👥</span><span>Team</span></button>
-      <button class="nav-btn" id="nbNotifications" onclick="switchNav('notifications')"><span>🔔</span><span>Alerts</span><span class="notification-badge" id="notifBadge">0</span></button>
-      <button class="nav-btn" id="nbSupport" onclick="switchNav('support')"><span>🎧</span><span>Support</span></button>
+      <button class="nav-btn active" id="nbHome" onclick="switchNav('home', 0)"><span>⚡</span><span>Invest</span></button>
+      <button class="nav-btn" id="nbTasks" onclick="switchNav('tasks', 1)"><span>🎯</span><span>Tasks</span></button>
+      <button class="nav-btn" id="nbAssets" onclick="switchNav('assets', 2)"><span>📊</span><span>Assets</span></button>
+      <button class="nav-btn" id="nbTeam" onclick="switchNav('team', 3)"><span>👥</span><span>Team</span></button>
+      <button class="nav-btn" id="nbNotifications" onclick="switchNav('notifications', 4)"><span>🔔</span><span>Alerts</span><span class="notification-badge" id="notifBadge">0</span></button>
+      <button class="nav-btn" id="nbSupport" onclick="switchNav('support', 5)"><span>🎧</span><span>Support</span></button>
     </nav>
   </div>
 
@@ -679,6 +719,8 @@
     let sseConnection = null;
     let loggedInUserData = null;
     let depositCountdownInterval = null;
+
+    const tabsOrder = ['home', 'tasks', 'assets', 'team', 'notifications', 'support'];
 
     const validatePasswordFormat = (pass) => {
       const minLength = pass.length >= 6;
@@ -785,6 +827,7 @@
       drawSpinWheel();
       startSettlementCountdown();
       startApp();
+      initSwipeGestures();
       setTimeout(triggerRandomActivityToast, 3000);
     });
 
@@ -804,24 +847,18 @@
       document.getElementById('fForgot').style.display = 'block';
     }
 
-    function switchNav(n) {
-      ['tabHome', 'tabTasks', 'tabAssets', 'tabTeam', 'tabNotifications', 'tabSupport'].forEach(tab => {
-        const el = document.getElementById(tab);
-        if (el) el.style.display = 'none';
-      });
+    function switchNav(n, index) {
+      const track = document.getElementById('slideTrack');
+      if (track) {
+        track.style.transform = `translateX(-${index * (100 / 6)}%)`;
+      }
+
       ['nbHome', 'nbTasks', 'nbAssets', 'nbTeam', 'nbNotifications', 'nbSupport'].forEach(btn => {
         const el = document.getElementById(btn);
         if (el) el.classList.remove('active');
       });
 
-      const activeTabMap = { home: 'tabHome', tasks: 'tabTasks', assets: 'tabAssets', team: 'tabTeam', notifications: 'tabNotifications', support: 'tabSupport' };
       const activeBtnMap = { home: 'nbHome', tasks: 'nbTasks', assets: 'nbAssets', team: 'nbTeam', notifications: 'nbNotifications', support: 'nbSupport' };
-
-      const targetTab = document.getElementById(activeTabMap[n]);
-      if (targetTab) {
-        targetTab.style.display = 'block';
-        targetTab.style.animation = 'fadeIn 0.3s ease-out';
-      }
       const targetBtn = document.getElementById(activeBtnMap[n]);
       if (targetBtn) targetBtn.classList.add('active');
 
@@ -831,6 +868,43 @@
 
       closeModal();
       closeSupportModal();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Touch & Swipe Gesture Logic for App-like Experience
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let currentTabIndex = 0;
+
+    function initSwipeGestures() {
+      const wrapper = document.getElementById('slideWrapper');
+      if (!wrapper) return;
+
+      wrapper.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      wrapper.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+      }, { passive: true });
+    }
+
+    function handleSwipeGesture() {
+      const swipeThreshold = 50;
+      if (touchEndX < touchStartX - swipeThreshold) {
+        // Swipe Left -> Next Tab
+        if (currentTabIndex < tabsOrder.length - 1) {
+          currentTabIndex++;
+          switchNav(tabsOrder[currentTabIndex], currentTabIndex);
+        }
+      } else if (touchEndX > touchStartX + swipeThreshold) {
+        // Swipe Right -> Previous Tab
+        if (currentTabIndex > 0) {
+          currentTabIndex--;
+          switchNav(tabsOrder[currentTabIndex], currentTabIndex);
+        }
+      }
     }
 
     async function requestEmailOtp() {
@@ -1334,7 +1408,7 @@
           withdrawSec.innerHTML = `
             <div style="text-align:center; padding: 10px 0;">
               <p style="font-size:13px; color:var(--accent-yellow); margin-bottom:16px; font-weight:600;">⚠️ You must configure your 6-digit Security PIN in the Support tab before requesting instant payouts.</p>
-              <button type="button" onclick="closeModal(); switchNav('support');" style="width:100%; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);">
+              <button type="button" onclick="closeModal(); switchNav('support', 5);" style="width:100%; background:var(--accent); color:white; border:none; padding:14px; border-radius:12px; font-weight:900; cursor:pointer; font-size:14px; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);">
                 Configure Security PIN Now
               </button>
             </div>
