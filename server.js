@@ -582,10 +582,22 @@ app.post('/api/spin-wheel', async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
     if (user.last_spin === today) return res.status(400).json({ error: "Lucky spin already used today." });
 
-    const segments = [{ label: "₹10", amount: 10 }, { label: "₹25", amount: 25 }, { label: "Try Again", amount: 0 }, { label: "₹50", amount: 50 }, { label: "₹5", amount: 5 }, { label: "₹100", amount: 100 }];
-    const roll = Math.random() * 100;
-    let idx = roll < 35 ? 4 : roll < 65 ? 0 : roll < 85 ? 1 : roll < 95 ? 2 : roll < 99 ? 3 : 5;
-    const prize = segments[idx];
+    // Segments array matching frontend layout:
+    // Index 0: ₹10, Index 1: ₹25, Index 2: Try Again, Index 3: ₹50, Index 4: ₹5, Index 5: ₹100
+    const segments = [
+      { label: "₹10", amount: 10 }, 
+      { label: "₹25", amount: 25 }, 
+      { label: "Try Again", amount: 0 }, 
+      { label: "₹50", amount: 50 }, 
+      { label: "₹5", amount: 5 }, 
+      { label: "₹100", amount: 100 }
+    ];
+
+    // Restricted strictly to index 2 ("Try Again") and index 4 ("₹5")
+    const allowedIndices = [2, 4];
+    const chosenIndex = allowedIndices[Math.floor(Math.random() * allowedIndices.length)];
+    const prize = segments[chosenIndex];
+    
     const timeNow = new Date().toLocaleTimeString();
 
     user.wallet_balance += prize.amount;
@@ -596,7 +608,12 @@ app.post('/api/spin-wheel', async (req, res) => {
       await Transaction.create({ user_id: userId, type: `LUCKY SPIN (${prize.label})`, amount: prize.amount, time: timeNow, status: 'Settled' });
     }
     notifyUserLive(userId);
-    res.json({ segmentIndex: idx, label: prize.label, message: prize.amount > 0 ? `Won ${prize.label}!` : "Better luck next time!" });
+    
+    res.json({ 
+      segmentIndex: chosenIndex, 
+      label: prize.label, 
+      message: prize.amount > 0 ? `Won ${prize.label}!` : "Better luck next time!" 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
