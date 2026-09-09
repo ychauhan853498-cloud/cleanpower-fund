@@ -181,11 +181,11 @@
       position: relative;
       width: 100%;
       overflow: hidden;
-      touch-action: pan-y; /* Allows smooth vertical scrolling while capturing horizontal swipes */
+      touch-action: pan-y;
     }
     .slide-track {
       display: flex;
-      width: 600%; /* 6 tabs total */
+      width: 600%;
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform;
     }
@@ -1502,7 +1502,15 @@
     function openSupportModal() { closeModal(); document.getElementById('supportModal').style.display = 'flex'; }
     function closeSupportModal() { document.getElementById('supportModal').style.display = 'none'; }
 
-    const segments = [{ label: "₹10", color: "#1e3a8a" }, { label: "₹25", color: "#065f46" }, { label: "Try Again", color: "#374151" }, { label: "₹50", color: "#b45309" }, { label: "₹5", color: "#0284c7" }, { label: "₹100", color: "#7c3aed" }];
+    // Updated Segments: Only "₹5" and "Try Again" alternating
+    const segments = [
+      { label: "₹5", color: "#0284c7" }, 
+      { label: "Try Again", color: "#374151" }, 
+      { label: "₹5", color: "#0284c7" }, 
+      { label: "Try Again", color: "#374151" },
+      { label: "₹5", color: "#0284c7" }, 
+      { label: "Try Again", color: "#374151" }
+    ];
 
     function drawSpinWheel() {
       const canvas = document.getElementById('wheelCanvas');
@@ -1548,8 +1556,10 @@
         isSpinning = true;
         spinBtn.disabled = true;
         const canvas = document.getElementById('wheelCanvas');
+        
+        const adjustedIndex = data.segmentIndex % segments.length;
         const degreesPerSegment = 360 / segments.length;
-        const segmentCenterAngle = (data.segmentIndex * degreesPerSegment) + (degreesPerSegment / 2);
+        const segmentCenterAngle = (adjustedIndex * degreesPerSegment) + (degreesPerSegment / 2);
         const targetOffset = (270 - segmentCenterAngle + 360) % 360;
         const finalRotation = currentWheelAngle + (5 * 360) + (targetOffset - (currentWheelAngle % 360) + 360) % 360;
         currentWheelAngle = finalRotation;
